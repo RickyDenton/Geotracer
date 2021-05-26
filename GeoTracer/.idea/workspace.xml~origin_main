@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AndroidLayouts">
+    <shared>
+      <config />
+    </shared>
+  </component>
+  <component name="AndroidLogFilters">
+    <option name="TOOL_WINDOW_LOG_LEVEL" value="debug" />
+    <option name="TOOL_WINDOW_CONFIGURED_FILTER" value="Show only selected application" />
+  </component>
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="6ea0b472-2ab6-4806-a1a1-f1653b5edd79" name="Default Changelist" comment="Added TAGS to LogService for showing messages into the window.">
+      <change afterPath="$PROJECT_DIR$/../.idea/GeoTracer_v4.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/app/GeoTracer.app.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="Android_Accelerated_x86_Nougat" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view />
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="layoutResourceFile" />
+        <option value="resourceFile" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1sDi9ylUomX2mi7GkwvKTHd6WfE" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/utils" />
+    <property name="memory.settings.postsync.last.time.stamp" value="1620650065911" />
+    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.proportion" value="0.17" />
+    <property name="project.structure.side.proportion" value="0.2" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app/src/main/res" />
+      <recent name="$PROJECT_DIR$/app/src/main/res/drawable" />
+      <recent name="$PROJECT_DIR$/app/src/main/res/layout" />
+      <recent name="C:\Users\Riccardo\Documents\GitHub\GeoTracker\GeoTracer\app\src\main\java\com\geotracer\geotracer" />
+      <recent name="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.geotracer.geotracer.mainapp.heatMap" />
+      <recent name="com.geotracer.geotracer.db.remote" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="AndroidJUnit" factoryName="Android JUnit">
+      <option name="TEST_OBJECT" value="class" />
+      <option name="WORKING_DIRECTORY" value="$MODULE_DIR$" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App">
+      <module name="app" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="SKIP_NOOP_APK_INSTALLATIONS" value="true" />
+      <option name="FORCE_STOP_RUNNING_APP" value="true" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
+      <option name="DEBUGGER_TYPE" value="Auto" />
+      <Auto>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+      </Auto>
+      <Hybrid>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+      </Hybrid>
+      <Java />
+      <Native>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+      </Native>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Sample Java Methods" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" BundledDictionaries="0" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" Dictionaries="0" CorrectionsLimit="5" DefaultDictionary="application-level" UseSingleDictionary="true" />
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="6ea0b472-2ab6-4806-a1a1-f1653b5edd79" name="Default Changelist" comment="" />
+      <created>1620413413419</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1620413413419</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Created return classes for give a finer condition reporting&#10;&#10;Created keystore service and basic elements:&#10;     - service and elements to permit connection from other elements&#10;     - created beacon collection and methods to verity/put/remove elements&#10;     - created bucket collection and methods to add/getAll/remove elements">
+      <created>1620425396111</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1620425396111</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Putted basic elements ignored by the git commit">
+      <created>1620425533437</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1620425533437</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Improved KeyValueManagement service&#10;     - created set of periodic Workers to clean the store&#10;     - cleaned data from expired information before be given&#10;     - add user location management&#10;     - add user bucket management&#10;     - add user signature management&#10;&#10;Created NotificationSender service&#10;     - created BoundService for its functionalities&#10;     - created connections with KeyValueManagement Service&#10;     - created listeners to manage the async requests&#10;     - created workers to send infection Notification&#10;&#10;General&#10;     - defined data passed between Riccardo and mine services&#10;     - created a set of classes to enforce the parameters sharing between services">
+      <created>1620606747949</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1620606747949</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Optimized Keyvalue and Notification systems&#10;     - only one periodic thread istantiated for keyvalue management&#10;     - completed mechanism for notification receive">
+      <created>1620653789977</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1620653789977</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Completed firestore management and all the interconnection between the components to generate the final behaviour">
+      <created>1620685573057</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1620685573057</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Merged Laura and mine components into a unique consistent application">
+      <created>1620728625839</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1620728625839</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Merging projects">
+      <created>1620730745847</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1620730745847</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Commented all the files and make some bug correction">
+      <created>1620740440083</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1620740440083</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Commented all the files and make some bug correction">
+      <created>1620740530768</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1620740530768</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Fixed some bug.">
+      <created>1620753441494</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1620753441494</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Solved an error occured during the previous merge">
+      <created>1620806822407</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1620806822407</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Ho commentato delle cose">
+      <created>1620830081089</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1620830081089</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Connected the positivity button">
+      <created>1620831816043</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1620831816043</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Implemented functionality and layout to show the contact with an infected people in all the activities once the notification has been received.">
+      <created>1620838738681</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1620838738681</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Add saving state for SettingActivity">
+      <created>1620889158396</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1620889158396</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Read from db the initial status.">
+      <created>1620893398982</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1620893398982</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Added a menu to delete something from the DB. The connections with the deleting functions still be absent.">
+      <created>1621108445062</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1621108445062</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Some additions to the previous commit.">
+      <created>1621110068312</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1621110068313</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Added the changes to the layout frame in case of a delete. Starting implementing the log receive">
+      <created>1621153743979</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1621153743979</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Asynchronous implementation of the log window, filtering by TAG.">
+      <created>1621159799549</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1621159799549</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Asynchronous implementation of the log window, filtering by TAG.">
+      <created>1621171115686</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1621171115686</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Write in LogWindow with an external service.">
+      <created>1621173761720</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1621173761720</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Implementation of periodic reception of Log Messages.">
+      <created>1621174978973</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1621174978973</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Added main service package (to be linked with other application components)">
+      <created>1621208953344</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1621208953344</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Merged main with local and remote database services">
+      <created>1621220658675</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1621220658675</updated>
+    </task>
+    <task id="LOCAL-00026" summary="removed the lock assert false">
+      <created>1621235035924</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1621235035925</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Added TAGS to LogService for showing messages into the window.">
+      <created>1621266136886</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1621266136886</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+              <option name="COLUMN_ORDER" />
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Putted basic elements ignored by the git commit" />
+    <MESSAGE value="Improved KeyValueManagement service&#10;     - created set of periodic Workers to clean the store&#10;     - cleaned data from expired information before be given&#10;     - add user location management&#10;     - add user bucket management&#10;     - add user signature management&#10;&#10;Created NotificationSender service&#10;     - created BoundService for its functionalities&#10;     - created connections with KeyValueManagement Service&#10;     - created listeners to manage the async requests&#10;     - created workers to send infection Notification&#10;&#10;General" />
+    <MESSAGE value="Improved KeyValueManagement service&#10;     - created set of periodic Workers to clean the store&#10;     - cleaned data from expired information before be given&#10;     - add user location management&#10;     - add user bucket management&#10;     - add user signature management&#10;&#10;Created NotificationSender service&#10;     - created BoundService for its functionalities&#10;     - created connections with KeyValueManagement Service&#10;     - created listeners to manage the async requests&#10;     - created workers to send infection Notification&#10;&#10;General&#10;     - defined data passed between Riccardo and mine services&#10;     - created a set of classes to enforce the parameters sharing between services" />
+    <MESSAGE value="Optimized Keyvalue and Notification systems&#10;     - only one periodic thread istantiated for keyvalue management&#10;     - completed mechanism for notification receive" />
+    <MESSAGE value="Completed firestore management and all the interconnection between the components to generate the final behaviour" />
+    <MESSAGE value="Merged Laura and mine components into a unique consistent application" />
+    <MESSAGE value="Merging projects" />
+    <MESSAGE value="Commented all the files and make some bug correction" />
+    <MESSAGE value="Fixed some bug." />
+    <MESSAGE value="Solved an error occured during the previous merge" />
+    <MESSAGE value="Ho commentato delle cose" />
+    <MESSAGE value="Connected the positivity button" />
+    <MESSAGE value="Implemented functionality and layout to show the contact with an infected people in all the activities once the notification has been received." />
+    <MESSAGE value="Add saving state for SettingActivity" />
+    <MESSAGE value="Read from db the initial status." />
+    <MESSAGE value="Added a menu to delete something from the DB. The connections with the deleting functions still be absent." />
+    <MESSAGE value="Some additions to the previous commit." />
+    <MESSAGE value="Added the changes to the layout frame in case of a delete. Starting implementing the log receive" />
+    <MESSAGE value="Asynchronous implementation of the log window, filtering by TAG." />
+    <MESSAGE value="Write in LogWindow with an external service." />
+    <MESSAGE value="Implementation of periodic reception of Log Messages." />
+    <MESSAGE value="Added main service package (to be linked with other application components)" />
+    <MESSAGE value="Merged main with local and remote database services" />
+    <MESSAGE value="removed the lock assert false" />
+    <MESSAGE value="Added TAGS to LogService for showing messages into the window." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added TAGS to LogService for showing messages into the window." />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="688" y="277" width="960" height="533" key="#PSD" timestamp="1621207054559">
+      <screen x="0" y="0" width="2752" height="1109" />
+    </state>
+    <state x="688" y="277" key="#PSD/0.0.2752.1109@0.0.2752.1109" timestamp="1621207054559" />
+    <state x="480" y="293" key="#PSD/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049" timestamp="1620735240374" />
+    <state x="480" y="293" width="960" height="533" key="#PSD/0.31.1920.1049@0.31.1920.1049" timestamp="1620414190964" />
+    <state x="768" y="264" width="384" height="590" key="#com.intellij.ide.util.MemberChooser" timestamp="1620683386341">
+      <screen x="0" y="31" width="1920" height="1049" />
+    </state>
+    <state x="768" y="264" width="384" height="590" key="#com.intellij.ide.util.MemberChooser/0.31.1920.1049@0.31.1920.1049" timestamp="1620683386341" />
+    <state x="589" y="276" key="#com.intellij.refactoring.memberPullUp.PullUpDialog" timestamp="1621280519539">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state x="589" y="276" key="#com.intellij.refactoring.memberPullUp.PullUpDialog/0.23.1440.794@0.23.1440.794" timestamp="1621280519539" />
+    <state x="693" y="306" width="534" height="506" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1620684174336">
+      <screen x="0" y="31" width="1920" height="1049" />
+    </state>
+    <state x="693" y="306" width="534" height="506" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.31.1920.1049@0.31.1920.1049" timestamp="1620684174336" />
+    <state x="100" y="123" width="1240" height="594" key="AVDManager" timestamp="1620818605724">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state x="100" y="123" width="1240" height="594" key="AVDManager/0.23.1440.794@0.23.1440.794" timestamp="1620818605724" />
+    <state x="308" y="180" width="824" height="472" key="AndroidCreateResourceFileDialog" timestamp="1621106732984">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state x="308" y="180" key="AndroidCreateResourceFileDialog/0.23.1440.794@0.23.1440.794" timestamp="1621106732984" />
+    <state x="308" y="181" width="824" height="472" key="AndroidCreateResourceFileDialog/0.23.1440.797@0.23.1440.797" timestamp="1620832184707" />
+    <state x="308" y="182" key="AndroidCreateResourceFileDialog/0.23.1440.800@0.23.1440.800" timestamp="1620749374410" />
+    <state x="1065" y="301" width="434" height="487" key="FileChooserDialogImpl" timestamp="1621218807558">
+      <screen x="0" y="0" width="2752" height="1109" />
+    </state>
+    <state x="1065" y="301" key="FileChooserDialogImpl/0.0.2752.1109@0.0.2752.1109" timestamp="1621218807558" />
+    <state x="743" y="316" width="434" height="487" key="FileChooserDialogImpl/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049" timestamp="1620727434667" />
+    <state width="1392" height="250" key="GridCell.Tab.0.bottom" timestamp="1621283015981">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state width="1354" height="262" key="GridCell.Tab.0.bottom/0.0.2752.1109@0.0.2752.1109" timestamp="1621231179482" />
+    <state width="1392" height="250" key="GridCell.Tab.0.bottom/0.23.1440.794@0.23.1440.794" timestamp="1621283015981" />
+    <state width="1398" height="213" key="GridCell.Tab.0.bottom/0.23.1440.797@0.23.1440.797" timestamp="1620893505365" />
+    <state width="1398" height="542" key="GridCell.Tab.0.bottom/0.23.1440.800@0.23.1440.800" timestamp="1620893030282" />
+    <state width="1398" height="205" key="GridCell.Tab.0.bottom/0.23.1440.803@0.23.1440.803" timestamp="1620893240726" />
+    <state width="1874" height="277" key="GridCell.Tab.0.bottom/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049" timestamp="1620741661647" />
+    <state width="1874" height="277" key="GridCell.Tab.0.bottom/0.31.1920.1049@0.31.1920.1049" timestamp="1620792102257" />
+    <state width="1392" height="250" key="GridCell.Tab.0.center" timestamp="1621283015980">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state width="1354" height="262" key="GridCell.Tab.0.center/0.0.2752.1109@0.0.2752.1109" timestamp="1621231179481" />
+    <state width="1392" height="250" key="GridCell.Tab.0.center/0.23.1440.794@0.23.1440.794" timestamp="1621283015980" />
+    <state width="1398" height="213" key="GridCell.Tab.0.center/0.23.1440.797@0.23.1440.797" timestamp="1620893505365" />
+    <state width="1398" height="542" key="GridCell.Tab.0.center/0.23.1440.800@0.23.1440.800" timestamp="1620893030280" />
+    <state width="1398" height="205" key="GridCell.Tab.0.center/0.23.1440.803@0.23.1440.803" timestamp="1620893240725" />
+    <state width="1874" height="277" key="GridCell.Tab.0.center/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049" timestamp="1620741661647" />
+    <state width="1874" height="277" key="GridCell.Tab.0.center/0.31.1920.1049@0.31.1920.1049" timestamp="1620792102256" />
+    <state width="1392" height="250" key="GridCell.Tab.0.left" timestamp="1621283015979">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state width="1354" height="262" key="GridCell.Tab.0.left/0.0.2752.1109@0.0.2752.1109" timestamp="1621231179481" />
+    <state width="1392" height="250" key="GridCell.Tab.0.left/0.23.1440.794@0.23.1440.794" timestamp="1621283015979" />
+    <state width="1398" height="213" key="GridCell.Tab.0.left/0.23.1440.797@0.23.1440.797" timestamp="1620893505364" />
+    <state width="1398" height="542" key="GridCell.Tab.0.left/0.23.1440.800@0.23.1440.800" timestamp="1620893030279" />
+    <state width="1398" height="205" key="GridCell.Tab.0.left/0.23.1440.803@0.23.1440.803" timestamp="1620893240723" />
+    <state width="1874" height="277" key="GridCell.Tab.0.left/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049" timestamp="1620741661647" />
+    <state width="1874" height="277" key="GridCell.Tab.0.left/0.31.1920.1049@0.31.1920.1049" timestamp="1620792102256" />
+    <state width="1392" height="250" key="GridCell.Tab.0.right" timestamp="1621283015980">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state width="1354" height="262" key="GridCell.Tab.0.right/0.0.2752.1109@0.0.2752.1109" timestamp="1621231179481" />
+    <state width="1392" height="250" key="GridCell.Tab.0.right/0.23.1440.794@0.23.1440.794" timestamp="1621283015980" />
+    <state width="1398" height="213" key="GridCell.Tab.0.right/0.23.1440.797@0.23.1440.797" timestamp="1620893505365" />
+    <state width="1398" height="542" key="GridCell.Tab.0.right/0.23.1440.800@0.23.1440.800" timestamp="1620893030281" />
+    <state width="1398" height="205" key="GridCell.Tab.0.right/0.23.1440.803@0.23.1440.803" timestamp="1620893240725" />
+    <state width="1874" height="277" key="GridCell.Tab.0.right/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049" timestamp="1620741661647" />
+    <state width="1874" height="277" key="GridCell.Tab.0.right/0.31.1920.1049@0.31.1920.1049" timestamp="1620792102257" />
+    <state width="1398" height="2" key="GridCell.Tab.1.bottom" timestamp="1620753483898">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state width="1398" height="2" key="GridCell.Tab.1.bottom/0.23.1440.794@0.23.1440.794" timestamp="1620753483898" />
+    <state width="1398" height="2" key="GridCell.Tab.1.bottom/0.23.1440.803@0.23.1440.803" timestamp="1620753068650" />
+    <state width="1398" height="2" key="GridCell.Tab.1.center" timestamp="1620753483897">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state width="1398" height="2" key="GridCell.Tab.1.center/0.23.1440.794@0.23.1440.794" timestamp="1620753483897" />
+    <state width="1398" height="2" key="GridCell.Tab.1.center/0.23.1440.803@0.23.1440.803" timestamp="1620753068649" />
+    <state width="1398" height="2" key="GridCell.Tab.1.left" timestamp="1620753483897">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state width="1398" height="2" key="GridCell.Tab.1.left/0.23.1440.794@0.23.1440.794" timestamp="1620753483897" />
+    <state width="1398" height="2" key="GridCell.Tab.1.left/0.23.1440.803@0.23.1440.803" timestamp="1620753068648" />
+    <state width="1398" height="2" key="GridCell.Tab.1.right" timestamp="1620753483898">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state width="1398" height="2" key="GridCell.Tab.1.right/0.23.1440.794@0.23.1440.794" timestamp="1620753483898" />
+    <state width="1398" height="2" key="GridCell.Tab.1.right/0.23.1440.803@0.23.1440.803" timestamp="1620753068649" />
+    <state x="416" y="222" width="810" height="531" key="Vcs.Push.Dialog.v2" timestamp="1621266145188">
+      <screen x="0" y="23" width="1440" height="794" />
+    </state>
+    <state x="416" y="222" key="Vcs.Push.Dialog.v2/0.23.1440.794@0.23.1440.794" timestamp="1621266145188" />
+    <state x="416" y="223" key="Vcs.Push.Dialog.v2/0.23.1440.797@0.23.1440.797" timestamp="1620830086731" />
+    <state x="416" y="224" key="Vcs.Push.Dialog.v2/0.23.1440.800@0.23.1440.800" timestamp="1620831820242" />
+    <state x="416" y="224" key="Vcs.Push.Dialog.v2/0.23.1440.803@0.23.1440.803" timestamp="1620893408274" />
+    <state x="555" y="294" width="810" height="531" key="Vcs.Push.Dialog.v2/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049" timestamp="1620740535558" />
+    <state x="555" y="294" width="810" height="531" key="Vcs.Push.Dialog.v2/0.31.1920.1049@0.31.1920.1049" timestamp="1621235041706" />
+    <state x="559" y="379" width="404" height="158" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1621278559693">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="559" y="379" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1440.900@0.0.1440.900" timestamp="1621278559693" />
+    <state x="559" y="357" width="404" height="158" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1440.794@0.23.1440.794" timestamp="1621170579210" />
+    <state x="745" y="472" width="430" height="175" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.31.1920.1049@0.31.1920.1049" timestamp="1620685606758" />
+    <state x="893" y="245" width="964" height="717" key="search.everywhere.popup" timestamp="1621213232313">
+      <screen x="0" y="0" width="2752" height="1109" />
+    </state>
+    <state x="893" y="245" width="964" height="717" key="search.everywhere.popup/0.0.2752.1109@0.0.2752.1109" timestamp="1621213232313" />
+    <state x="623" y="263" width="672" height="678" key="search.everywhere.popup/0.31.1920.1049@0.31.1920.1049" timestamp="1620485798425" />
+  </component>
+</project>

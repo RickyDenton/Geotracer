@@ -1,0 +1,613 @@
+Index: app/src/main/java/com/geotracer/geotracer/testingapp/TestingActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.geotracer.geotracer.testingapp;\r\n\r\nimport android.Manifest;\r\nimport android.content.BroadcastReceiver;\r\nimport android.content.ComponentName;\r\nimport android.content.Context;\r\nimport android.content.Intent;\r\nimport android.content.IntentFilter;\r\nimport android.content.ServiceConnection;\r\nimport android.content.pm.PackageManager;\r\nimport android.os.Bundle;\r\nimport android.os.IBinder;\r\nimport android.util.Log;\r\nimport android.view.Gravity;\r\nimport android.view.LayoutInflater;\r\nimport android.view.Menu;\r\nimport android.view.MenuItem;\r\nimport android.view.View;\r\nimport android.widget.Button;\r\nimport android.widget.FrameLayout;\r\nimport android.widget.LinearLayout;\r\nimport android.widget.PopupMenu;\r\nimport android.widget.PopupWindow;\r\nimport android.widget.ScrollView;\r\nimport android.widget.TextView;\r\nimport android.widget.Toast;\r\n\r\nimport androidx.annotation.NonNull;\r\nimport androidx.appcompat.app.AppCompatActivity;\r\nimport androidx.appcompat.widget.Toolbar;\r\nimport androidx.core.app.ActivityCompat;\r\nimport androidx.core.content.ContextCompat;\r\nimport androidx.localbroadcastmanager.content.LocalBroadcastManager;\r\n\r\nimport com.geotracer.geotracer.R;\r\nimport com.geotracer.geotracer.UserStatus;\r\nimport com.geotracer.geotracer.db.local.KeyValueManagement;\r\nimport com.geotracer.geotracer.db.remote.FirestoreManagement;\r\nimport com.geotracer.geotracer.infoapp.InfoActivity;\r\nimport com.geotracer.geotracer.mainapp.MainActivity;\r\nimport com.geotracer.geotracer.notifications.NotificationSender;\r\nimport com.geotracer.geotracer.service.GeotracerService;\r\nimport com.geotracer.geotracer.settingapp.SettingActivity;\r\nimport com.geotracer.geotracer.utils.HashValues;\r\nimport com.geotracer.geotracer.utils.LogParsing;\r\nimport com.geotracer.geotracer.utils.data.BaseLocation;\r\nimport com.geotracer.geotracer.utils.data.TestData;\r\nimport com.geotracer.geotracer.utils.generics.OpStatus;\r\nimport com.geotracer.geotracer.utils.generics.RetStatus;\r\n\r\nimport java.util.HashMap;\r\nimport java.util.List;\r\n\r\npublic class TestingActivity extends AppCompatActivity {\r\n\r\n\r\n    LogService logService;\r\n    BroadcastReceiver notificationReceiver;\r\n    BroadcastReceiver logServiceReceiver;\r\n    NotificationSender notificationSender;\r\n    private FirestoreManagement firestore;\r\n    private KeyValueManagement keyValueManagement;\r\n    private GeotracerService geotracerMainService;\r\n\r\n    public static final String TESTING_ACTIVITY_LOG = \"TestingActivity\";\r\n\r\n\r\n    @Override\r\n    protected void onCreate(Bundle savedInstanceState) {\r\n        super.onCreate(savedInstanceState);\r\n        setContentView(R.layout.activity_testing);\r\n\r\n\r\n        TextView tv = (TextView) findViewById(R.id.log_text);\r\n        tv.setText(\"\");\r\n\r\n        /*\r\n        BROADCAST RECEIVER FOR THE LOG SERVICE\r\n         */\r\n        LocalBroadcastManager.getInstance(TestingActivity.this).registerReceiver(\r\n                logServiceReceiver = new BroadcastReceiver() {\r\n                    @Override\r\n                    public void onReceive(Context context, Intent intent) {\r\n\r\n                        //Log.d(TESTING_ACTIVITY_LOG, \"LogService BROADCAST LISTENER\");\r\n                        String toLog = intent.getStringExtra(\"LogMessage\");\r\n                        LogParsing logParsing = new LogParsing(toLog);\r\n                        //HashMap<String, HashValues> hash_map = logParsing.getLog_values();\r\n                        TestData hash_map = logParsing.getLog_values();\r\n\r\n                        if (hash_map.getData().size() > 0) {\r\n                            firestore.saveTestData(hash_map);\r\n                        }\r\n\r\n\r\n\r\n                        tv.append(toLog);\r\n                        ScrollView sv = (ScrollView) findViewById(R.id.scrollview);\r\n                        sv.fullScroll(ScrollView.FOCUS_DOWN);\r\n                        Log.d(TESTING_ACTIVITY_LOG, toLog);\r\n\r\n                    }\r\n\r\n                },new IntentFilter(LogService.ACTION_BROADCAST)\r\n\r\n        );\r\n\r\n        /*\r\n        BROADCAST RECEIVER FOR NOTIFICATIONS COMING FROM THE DB\r\n         */\r\n        LocalBroadcastManager.getInstance(TestingActivity.this).registerReceiver(\r\n                notificationReceiver = new BroadcastReceiver() {\r\n                    @Override\r\n                    public void onReceive(Context context, Intent intent) {\r\n\r\n                        Log.d(TESTING_ACTIVITY_LOG, \"BROADCAST LISTENER FOR CONTACTS\");\r\n                        String toLog = intent.getStringExtra(\"Contact\");\r\n\r\n                        TextView tv = new TextView(TestingActivity.this);\r\n                        showPopupWindow(tv, toLog);\r\n\r\n\r\n                        FrameLayout frameLayout = findViewById(R.id.contact_frame);\r\n                        frameLayout.setBackgroundColor(getResources().getColor(R.color.red));\r\n                        TextView contact_text = findViewById(R.id.contact_text);\r\n                        contact_text.setText(getResources().getString(R.string.contacts));\r\n                        ((UserStatus) TestingActivity.this.getApplication()).setContacts(true);\r\n                    }\r\n                },new IntentFilter(NotificationSender.ACTION_BROADCAST)\r\n\r\n        );\r\n        initBottomMenu();\r\n\r\n    }\r\n\r\n    /*\r\n    MENU ICON MANAGEMENT\r\n     */\r\n    private void initBottomMenu() {\r\n\r\n        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);\r\n        toolbar.inflateMenu(R.menu.testing_menu);\r\n        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {\r\n            @Override\r\n            public boolean onMenuItemClick(MenuItem item) {\r\n                Intent i;\r\n                switch (item.getItemId()) {\r\n\r\n                    case R.id.from_testing_to_main:\r\n                        i = new Intent(getApplicationContext(), MainActivity.class);\r\n                        startActivity(i);\r\n                        return true;\r\n                    case R.id.from_testing_to_settings:\r\n                        i = new Intent(getApplicationContext(), SettingActivity.class);\r\n                        startActivity(i);\r\n                        return true;\r\n                    case R.id.from_testing_to_info:\r\n                        i = new Intent(getApplicationContext(), InfoActivity.class);\r\n                        startActivity(i);\r\n                        return true;\r\n                    default:\r\n                        return TestingActivity.super.onOptionsItemSelected(item);\r\n                }\r\n            }\r\n        });\r\n    }\r\n\r\n\r\n    /*\r\n    CONNECTION WITH THE NOTIFICATION SERVICE\r\n     */\r\n    private ServiceConnection notificationService = new ServiceConnection() {\r\n\r\n        @Override\r\n        public void onServiceConnected(ComponentName className, IBinder service) {\r\n\r\n            NotificationSender.LocalBinder binder = (NotificationSender.LocalBinder) service;\r\n            notificationSender = binder.getService();\r\n\r\n        }\r\n\r\n        @Override\r\n        public void onServiceDisconnected(ComponentName arg0) {\r\n\r\n            notificationSender = null;\r\n\r\n        }\r\n    };\r\n\r\n    /*\r\n    CONNECTION WITH THE LOG SERVICE\r\n     */\r\n    private ServiceConnection logServiceConnection = new ServiceConnection() {\r\n\r\n        @Override\r\n        public void onServiceConnected(ComponentName className,\r\n                                       IBinder s) {\r\n            // We've bound to LocalService, cast the IBinder and get LocalService instance\r\n            LogService.LocalBinder binder = (LogService.LocalBinder) s;\r\n            logService = binder.getService();\r\n        }\r\n\r\n        @Override\r\n        public void onServiceDisconnected(ComponentName arg0) {\r\n            logService = null;\r\n        }\r\n    };\r\n\r\n    /*\r\n    CONNECTION WITH THE FIRESTORE MANAGER SERVICE\r\n     */\r\n    private final ServiceConnection firestoreService = new ServiceConnection() {\r\n\r\n        @Override\r\n        public void onServiceConnected(ComponentName className, IBinder service) {\r\n\r\n            FirestoreManagement.LocalBinder binder = (FirestoreManagement.LocalBinder) service;\r\n            firestore = binder.getService();\r\n\r\n        }\r\n\r\n        @Override\r\n        public void onServiceDisconnected(ComponentName arg0) {\r\n\r\n            firestore = null;\r\n\r\n        }\r\n    };\r\n\r\n    /*\r\n    CONNECTION WITH THE KEYVALUE MANAGER SERVICE\r\n     */\r\n    private final ServiceConnection keyValueService = new ServiceConnection() {\r\n\r\n        @Override\r\n        public void onServiceConnected(ComponentName className, IBinder service) {\r\n\r\n            KeyValueManagement.LocalBinder binder = (KeyValueManagement.LocalBinder) service;\r\n            keyValueManagement = binder.getService();\r\n\r\n        }\r\n\r\n        @Override\r\n        public void onServiceDisconnected(ComponentName arg0) {\r\n\r\n            keyValueManagement = null;\r\n\r\n        }\r\n    };\r\n\r\n    /*\r\n    CONNECTION WITH THE MAIN APPLICATION SERVICE\r\n      */\r\n    private final ServiceConnection geotracerService = new ServiceConnection() {\r\n\r\n        @Override\r\n        public void onServiceConnected(ComponentName className, IBinder service) {\r\n\r\n            GeotracerService.GeotracerBinder binder = (GeotracerService.GeotracerBinder) service;\r\n            geotracerMainService = binder.getService();\r\n\r\n        }\r\n\r\n        @Override\r\n        public void onServiceDisconnected(ComponentName arg0) {\r\n\r\n            geotracerMainService = null;\r\n\r\n        }\r\n    };\r\n\r\n    protected void onResume() {\r\n        super.onResume();\r\n        /*\r\n        RESTART ALL THE BROADCAST RECEIVERS\r\n        */\r\n\r\n        /*  Questo è richiesto altrimenti il main service non può partire */\r\n        // Dynamic ACCESS_FINE_LOCATION permission check (required for API 23+)\r\n        if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)\r\n            if (ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.ACCESS_FINE_LOCATION))\r\n                Toast.makeText(this,\"Permission to access the device's location is required for using the service\",Toast.LENGTH_SHORT).show();\r\n            else  //Compatibility purposes\r\n                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 1);\r\n\r\n        //NOTIFICATION RECEIVER\r\n        IntentFilter iff= new IntentFilter(NotificationSender.ACTION_BROADCAST);\r\n        LocalBroadcastManager.getInstance(this).registerReceiver(notificationReceiver, iff);\r\n\r\n        //FIRESTORE MANAGEMENT\r\n        Intent intent = new Intent(this, FirestoreManagement.class);\r\n        bindService(intent, firestoreService, Context.BIND_AUTO_CREATE);\r\n\r\n        //KEYVALUE MANAGEMENT\r\n        intent = new Intent(this, KeyValueManagement.class);\r\n        bindService(intent, keyValueService, Context.BIND_AUTO_CREATE);\r\n\r\n        //LOG SERVICE\r\n        iff= new IntentFilter(LogService.ACTION_BROADCAST);\r\n        LocalBroadcastManager.getInstance(this).registerReceiver(logServiceReceiver, iff);\r\n\r\n\r\n        //MAIN APPLICATION SERVICE\r\n        intent = new Intent(this, GeotracerService.class);\r\n        bindService(intent, geotracerService, Context.BIND_AUTO_CREATE);\r\n\r\n        //SET THE VARIABLE FOR CONTACT NOTIFICATION STATUS\r\n        if(((UserStatus) this.getApplication()).getContacts()) {\r\n            FrameLayout frameLayout = findViewById(R.id.contact_frame);\r\n            frameLayout.setBackgroundColor(getResources().getColor(R.color.red));\r\n            TextView tv = findViewById(R.id.contact_text);\r\n            tv.setText(getResources().getString(R.string.contacts));\r\n        }\r\n\r\n    }\r\n\r\n    @Override\r\n    protected void onPause(){\r\n        super.onPause();\r\n\r\n        /*\r\n        STOP THE BROADCAST RECEIVER AND UNBIND THE OTHER SERVICES.\r\n         */\r\n\r\n        //NOTIFICATION\r\n        LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver);\r\n\r\n        //FIRESTORE\r\n        if(firestoreService != null)\r\n            unbindService(firestoreService);\r\n\r\n        //KEYVALUE\r\n        if(keyValueService != null)\r\n            unbindService(keyValueService);\r\n\r\n\r\n        //MAIN SERVICE\r\n        if(geotracerMainService != null)\r\n            unbindService(geotracerService);\r\n\r\n        //LOGSERVICE\r\n        LocalBroadcastManager.getInstance(this).unregisterReceiver(logServiceReceiver);\r\n\r\n\r\n    }\r\n\r\n    @Override\r\n    protected void onStart() {\r\n        super.onStart();\r\n        // Bind to LocalService\r\n        Intent intent = new Intent(this, LogService.class);\r\n        bindService(intent, logServiceConnection, Context.BIND_AUTO_CREATE);\r\n\r\n        //BIND NOTIFICATION SERVICE\r\n        Intent intent2 = new Intent(this, NotificationSender.class);\r\n        bindService(intent2, notificationService, Context.BIND_AUTO_CREATE);\r\n\r\n        //BIND FIRESTORE SERVICE\r\n        intent = new Intent(this, FirestoreManagement.class);\r\n        bindService(intent, firestoreService, Context.BIND_AUTO_CREATE);\r\n\r\n        //BIND KEYVALUE SERVICE\r\n        intent = new Intent(this, KeyValueManagement.class);\r\n        bindService(intent, keyValueService, Context.BIND_AUTO_CREATE);\r\n\r\n\r\n        //BIND MAIN APPLICATION SERVICE\r\n        intent = new Intent(this, GeotracerService.class);\r\n        bindService(intent, geotracerService, Context.BIND_AUTO_CREATE);\r\n\r\n        TextView tv = (TextView) findViewById(R.id.log_text);\r\n        tv.setText(\"\");\r\n    }\r\n\r\n\r\n    @Override\r\n    protected void onStop() {\r\n        super.onStop();\r\n        if(logServiceConnection != null)\r\n            unbindService(logServiceConnection);\r\n        if(notificationService != null)\r\n            unbindService(notificationService);\r\n    }\r\n\r\n\r\n\r\n    public void startDissemination(View view) {\r\n\r\n        if(geotracerMainService != null)\r\n        {\r\n            boolean result = geotracerMainService.startAdvertising();\r\n            if(result)\r\n            {\r\n                String s = \"DEVICE STARTED DISSEMINATING ITS SIGNATURE\\n\";\r\n\r\n                TextView tv = new TextView(TestingActivity.this);\r\n                Log.d(TESTING_ACTIVITY_LOG, s);\r\n                showPopupWindow(tv, s);\r\n            }\r\n            else\r\n            {\r\n                Log.d(TESTING_ACTIVITY_LOG,\"Signature Dissemination Already Started\");\r\n            }\r\n        }\r\n        else\r\n            Log.w(TESTING_ACTIVITY_LOG, \"Geotracer main service is unbound!\");\r\n\r\n    }\r\n\r\n\r\n    public void stopDissemination(View view) {\r\n\r\n        if(geotracerMainService != null)\r\n        {\r\n            boolean result = geotracerMainService.stopAdvertising();\r\n            if(result)\r\n            {\r\n                String s = \"DISSEMINATION STOPPED\";\r\n                TextView tv = new TextView(TestingActivity.this);\r\n                showPopupWindow(tv, s);\r\n                Log.d(TESTING_ACTIVITY_LOG, s);\r\n            }\r\n            else\r\n            {\r\n                Log.d(TESTING_ACTIVITY_LOG,\"Signature Dissemination Already Stopped\");\r\n            }\r\n        }\r\n        else\r\n            Log.w(TESTING_ACTIVITY_LOG, \"Geotracer main service is unbound!\");\r\n\r\n    }\r\n\r\n\r\n    public void startCollection(View view) {\r\n\r\n        if(geotracerMainService != null)\r\n        {\r\n            boolean result = geotracerMainService.startScanning();\r\n            if(result)\r\n            {\r\n                String s = \"SIGNATURE COLLECTION STARTED\";\r\n                TextView tv = new TextView(TestingActivity.this);\r\n                showPopupWindow(tv, s);\r\n                Log.d(TESTING_ACTIVITY_LOG, s);\r\n            }\r\n            else\r\n            {\r\n                Log.d(TESTING_ACTIVITY_LOG,\"Signature Collection Already Started\");\r\n            }\r\n        }\r\n        else\r\n            Log.w(TESTING_ACTIVITY_LOG, \"Geotracer main service is unbound!\");\r\n\r\n    }\r\n\r\n\r\n    public void stopCollection(View view) {\r\n\r\n        if(geotracerMainService != null)\r\n        {\r\n            boolean result = geotracerMainService.stopScanning();\r\n            if(result)\r\n            {\r\n                String s = \"SIGNATURE COLLECTION STOPPED\";\r\n                TextView tv = new TextView(TestingActivity.this);\r\n                showPopupWindow(tv, s);\r\n                Log.d(TESTING_ACTIVITY_LOG, s);\r\n            }\r\n            else\r\n            {\r\n                Log.d(TESTING_ACTIVITY_LOG,\"Signature Collection Already Stopped\");\r\n            }\r\n        }\r\n        else\r\n            Log.w(TESTING_ACTIVITY_LOG, \"Geotracer main service is unbound!\");\r\n\r\n    }\r\n\r\n\r\n    public void infected(View view) {\r\n        /*\r\n            TAG THE USER AS INFECTED\r\n            THE RESULT WILL BE SHOWN IN A POPUP WINDOW IN ADDITION TO THE LOG SECTION\r\n         */\r\n        TextView tv = new TextView(TestingActivity.this);\r\n\r\n        RetStatus<List<BaseLocation>> userPositions = keyValueManagement.positions.getAllPositions();\r\n        if(userPositions.getStatus() == OpStatus.OK){\r\n            firestore.insertInfectedLocations(userPositions.getValue());\r\n            notificationSender.infectionAlert();\r\n            Log.d(TESTING_ACTIVITY_LOG, \"POSITIVITY REPORT ENABLED\");\r\n            showPopupWindow(tv, \"USER TAGGED AS INFECTED\");\r\n        }\r\n        else {\r\n            showPopupWindow(tv, \"ERROR! USER NOT TAGGED AS INFECTED\");\r\n            Log.d(TESTING_ACTIVITY_LOG, \"ERROR! USER NOT TAGGED AS INFECTED\");\r\n        }\r\n\r\n    }\r\n\r\n\r\n    /*\r\n    IT DELETES THE OLD SIGNATURES FROM THE DB\r\n     */\r\n\r\n    public void delete(View view) {\r\n\r\n        /*\r\n\r\n        PERFORM THE ACTIONS NECESSARY TO THE DELETE FROM THE DB THE DATA OLDER THAN 14 DAYS.\r\n        IF THE TESTING INTERFACE IS AVAILABLE TO EVERYONE I SUGGEST TO DELETE ONLY ITS DATA.\r\n        A POPUP WINDOW WITH THE RESULT OF THE OPERATION WILL BE SHOWN\r\n         */\r\n\r\n        if(firestore.dropExpiredLocations()== OpStatus.OK) {\r\n            TextView tv = new TextView(TestingActivity.this);\r\n            showPopupWindow(tv, \"Old data has been deleted from the database\");\r\n            Log.d(TESTING_ACTIVITY_LOG, \"Old data has been deleted from the database\");\r\n        }else{\r\n            TextView tv = new TextView(TestingActivity.this);\r\n            showPopupWindow(tv, \"Error! Data not deleted\");\r\n            Log.d(TESTING_ACTIVITY_LOG, \"Error! Old Data not deleted\");\r\n        }\r\n\r\n\r\n    }\r\n\r\n    /*\r\n    IT CLEANS THE LOG WINDOW\r\n     */\r\n\r\n    public void emptyLog(View view) {\r\n        /*\r\n\r\n        THIS FUNCTION DELETE THE CONTENT FROM THE LOG WINDOW\r\n\r\n         */\r\n        TextView tv = (TextView) findViewById(R.id.log_text);\r\n        tv.setText(\"\");\r\n\r\n        try {\r\n            Runtime.getRuntime().exec(\"logcat -b all -c\");\r\n\r\n\r\n        } catch (Exception e) {\r\n            e.printStackTrace();\r\n        }\r\n\r\n    }\r\n\r\n    /*\r\n    IT SHOWS THE POPUP WINDOW\r\n     */\r\n\r\n    protected void showPopupWindow(TextView location, String message){\r\n\r\n        //instantiate the popup.xml layout file\r\n        LayoutInflater layoutInflater = (LayoutInflater) TestingActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);\r\n\r\n        //it is used to take the resources from the popup.xml file\r\n        View customView = layoutInflater.inflate(R.layout.popup,null);\r\n\r\n        Button closePopupBtn = (Button) customView.findViewById(R.id.closePopupBtn);\r\n\r\n        //instantiate popup window\r\n        PopupWindow popupWindow = new PopupWindow(customView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);\r\n\r\n        //display the popup window\r\n        popupWindow.showAtLocation(location, Gravity.CENTER, 0, 0);\r\n\r\n\r\n        TextView popup_view = (TextView) customView.findViewById(R.id.popup_text);\r\n        popup_view.setText(message);\r\n\r\n        //close the popup window on button click\r\n        closePopupBtn.setOnClickListener(v -> popupWindow.dismiss());\r\n\r\n\r\n\r\n    }\r\n\r\n\r\n\r\n\r\n\r\n\r\n    /*\r\n            SAVE STATE BEFORE CHANGING ACTIVITY\r\n\r\n     */\r\n\r\n\r\n\r\n    @Override\r\n    protected void onSaveInstanceState(@NonNull Bundle outState) {\r\n\r\n        super.onSaveInstanceState(outState);\r\n\r\n    }\r\n\r\n    @Override\r\n    protected void onRestoreInstanceState(Bundle savedInstanceState){\r\n        super.onRestoreInstanceState(savedInstanceState);\r\n    }\r\n\r\n    /*\r\n\r\n    It manages delete menu. It discriminates between the choices and call the corrisponding drop function.\r\n\r\n\r\n     */\r\n\r\n    public void manageDelete(View view) {\r\n\r\n        //Creating the instance of PopupMenu\r\n        PopupMenu popup = new PopupMenu(TestingActivity.this, view);\r\n        //Inflating the Popup using xml file\r\n        popup.getMenuInflater().inflate(R.menu.delete_menu, popup.getMenu());\r\n\r\n        //registering popup with OnMenuItemClickListener\r\n        popup.setOnMenuItemClickListener(item -> {\r\n\r\n            TextView tv = new TextView(TestingActivity.this);\r\n            switch(item.getItemId()){\r\n                case R.id.delete_my_positions:\r\n                    //DELETE MY POSITIONS\r\n                    if(keyValueManagement.positions.dropAllPositions() != OpStatus.OK)\r\n                        showPopupWindow(tv, \"Error in removing positions\");\r\n                    else {\r\n                        showPopupWindow(tv, \"All positions removed\");\r\n                    }\r\n                    return true;\r\n                case R.id.delete_my_signatures:\r\n                    //DELETE MY SIGNATURES\r\n                    if(keyValueManagement.signatures.removeAllSignatures() != OpStatus.OK)\r\n                        showPopupWindow(tv, \"Error in removing signatures\");\r\n                    else\r\n                        showPopupWindow(tv, \"All signatures removed\");\r\n                    return true;\r\n                case R.id.delete_rec_beacons:\r\n                    //DELETE RECEIVED BEACONS\r\n                    if(keyValueManagement.beacons.dropAllBeacons() != OpStatus.OK)\r\n                        showPopupWindow(tv, \"Error in removing beacons\");\r\n                    else {\r\n                        showPopupWindow(tv, \"All beacons removed\");\r\n                    }\r\n                    return true;\r\n                case R.id.delete_all:\r\n                    //DELETE EVERYTHING\r\n                    if(!keyValueManagement.cleanLocalStore()) {\r\n                        showPopupWindow(tv, \"Error in cleaning the local database\");\r\n                    }\r\n                    else {\r\n                        if(notificationSender.forceNotInfected()==OpStatus.OK) {\r\n                            FrameLayout frameLayout = findViewById(R.id.contact_frame);\r\n                            frameLayout.setBackgroundColor(getResources().getColor(R.color.white));\r\n                            TextView contact_text = findViewById(R.id.contact_text);\r\n                            contact_text.setText(getResources().getString(R.string.contacts));\r\n                            ((UserStatus) TestingActivity.this.getApplication()).setContacts(false);\r\n                            showPopupWindow(tv, \"Local database cleaned\");\r\n                        }\r\n                    }\r\n                    return true;\r\n                case R.id.delete_bucket:\r\n                    if(notificationSender.removeAllBuckets() != OpStatus.OK)\r\n                        showPopupWindow(tv, \"Error in deleting buckets\");\r\n                    else{\r\n                        showPopupWindow(tv, \"All buckets removed\");\r\n                    }\r\n                default:\r\n                    return false;\r\n            }\r\n\r\n        });\r\n\r\n        popup.show();//showing popup menu\r\n\r\n    }\r\n\r\n    /*\r\n    NOT USED ANYMORE, BUT CAN BE USEFUL IF YOU WANT TO ASK FOR LOG DISPLAY INSTEAD OF PERIODICALLY RECEIVE THEM.\r\n     */\r\n    public void showLog(View view){\r\n\r\n        TextView tv = new TextView(TestingActivity.this);\r\n        showPopupWindow(tv, \"The LogWindow is managed automatically by a service\");\r\n        //service.listenToLog();\r\n    }\r\n\r\n\r\n    public void startService(View view) {\r\n\r\n        /* FIXME */\r\n        if(geotracerMainService == null)\r\n        {\r\n            Intent i = new Intent(this, GeotracerService.class);\r\n            startService(i);\r\n            bindService(i, geotracerService, Context.BIND_AUTO_CREATE);\r\n            String s = \"Geotracer service started\";\r\n            TextView tv = new TextView(TestingActivity.this);\r\n            showPopupWindow(tv, s);\r\n            Log.d(TESTING_ACTIVITY_LOG, s);\r\n        }\r\n        else\r\n            Log.w(TESTING_ACTIVITY_LOG, \"Geotracer main service is already started!\");\r\n\r\n    }\r\n\r\n    /* FIXME */\r\n    public void stopService(View view) {\r\n        if(geotracerMainService != null)\r\n        {\r\n            unbindService(geotracerService);\r\n            Intent i = new Intent(TestingActivity.this, GeotracerService.class);\r\n            stopService(i);\r\n\r\n            geotracerMainService = null;\r\n            String s = \"Geotracer service stopped\";\r\n            TextView tv = new TextView(TestingActivity.this);\r\n            showPopupWindow(tv, s);\r\n            Log.d(TESTING_ACTIVITY_LOG, s);\r\n        }\r\n        else\r\n            Log.w(TESTING_ACTIVITY_LOG, \"Geotracer main service already stopped\");\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/geotracer/geotracer/testingapp/TestingActivity.java	(revision c0015bb3fb26c505c8f685f26da9c052e53d80c2)
++++ app/src/main/java/com/geotracer/geotracer/testingapp/TestingActivity.java	(date 1621491006706)
+@@ -40,7 +40,6 @@
+ import com.geotracer.geotracer.mainapp.MainActivity;
+ import com.geotracer.geotracer.notifications.NotificationSender;
+ import com.geotracer.geotracer.service.GeotracerService;
+-import com.geotracer.geotracer.settingapp.SettingActivity;
+ import com.geotracer.geotracer.utils.HashValues;
+ import com.geotracer.geotracer.utils.LogParsing;
+ import com.geotracer.geotracer.utils.data.BaseLocation;
+@@ -148,10 +147,6 @@
+ 
+                     case R.id.from_testing_to_main:
+                         i = new Intent(getApplicationContext(), MainActivity.class);
+-                        startActivity(i);
+-                        return true;
+-                    case R.id.from_testing_to_settings:
+-                        i = new Intent(getApplicationContext(), SettingActivity.class);
+                         startActivity(i);
+                         return true;
+                     case R.id.from_testing_to_info:
+Index: app/src/main/java/com/geotracer/geotracer/mainapp/MainActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.geotracer.geotracer.mainapp;\r\n\r\nimport android.Manifest;\r\nimport android.content.BroadcastReceiver;\r\nimport android.content.ComponentName;\r\nimport android.content.Context;\r\nimport android.content.Intent;\r\nimport android.content.IntentFilter;\r\nimport android.content.ServiceConnection;\r\nimport android.content.pm.PackageManager;\r\nimport android.os.Build;\r\nimport android.os.Bundle;\r\nimport android.os.IBinder;\r\nimport android.util.Log;\r\nimport android.view.Gravity;\r\nimport android.view.LayoutInflater;\r\nimport android.view.MenuItem;\r\nimport android.view.View;\r\nimport android.widget.Button;\r\nimport android.widget.FrameLayout;\r\nimport android.widget.LinearLayout;\r\nimport android.widget.PopupWindow;\r\nimport android.widget.TextView;\r\nimport android.widget.Toast;\r\n\r\nimport androidx.annotation.NonNull;\r\nimport androidx.annotation.RequiresApi;\r\nimport androidx.appcompat.app.AppCompatActivity;\r\nimport androidx.appcompat.widget.Toolbar;\r\nimport androidx.core.app.ActivityCompat;\r\nimport androidx.core.content.ContextCompat;\r\nimport androidx.fragment.app.Fragment;\r\nimport androidx.localbroadcastmanager.content.LocalBroadcastManager;\r\n\r\nimport com.geotracer.geotracer.R;\r\nimport com.geotracer.geotracer.UsageTestActivity;\r\n\r\nimport com.geotracer.geotracer.UserStatus;\r\nimport com.geotracer.geotracer.infoapp.InfoActivity;\r\nimport com.geotracer.geotracer.mainapp.heatMap.HeatMap;\r\nimport com.geotracer.geotracer.notifications.NotificationSender;\r\nimport com.geotracer.geotracer.service.GeotracerService;\r\nimport com.geotracer.geotracer.testingapp.TestingActivity;\r\nimport com.geotracer.geotracer.topicMessagesBroadcast.TopicMessagesActivity;\r\nimport com.geotracer.geotracer.utils.generics.OpStatus;\r\nimport com.google.android.gms.tasks.OnCompleteListener;\r\nimport com.google.android.gms.tasks.Task;\r\nimport com.google.firebase.messaging.FirebaseMessaging;\r\n\r\n\r\npublic class MainActivity extends AppCompatActivity {\r\n\r\n    NotificationSender notificationSender;\r\n    BroadcastReceiver notificationReceiver;\r\n\r\n    public static final String MAIN_ACTIVITY_LOG = \"MainActivity\";\r\n\r\n    @Override\r\n    protected void onCreate(Bundle savedInstanceState) {\r\n        super.onCreate(savedInstanceState);\r\n        setContentView(R.layout.activity_main);\r\n\r\n        //FCM\r\n        FirebaseMessaging.getInstance().subscribeToTopic(\"weather\")\r\n                .addOnCompleteListener(new OnCompleteListener<Void>() {\r\n                    @Override\r\n                    public void onComplete(@NonNull Task<Void> task) {\r\n                        String msg = \"Done\";\r\n                        if (!task.isSuccessful()) {\r\n                            msg = \"Failed\";\r\n                        }\r\n                        Log.d(\"TopicMessagesBroadcastManager\", msg);\r\n                    }\r\n                });\r\n\r\n\r\n        //---------\r\n\r\n\r\n        LocalBroadcastManager.getInstance(MainActivity.this).registerReceiver(\r\n                notificationReceiver = new BroadcastReceiver() {\r\n                    @Override\r\n                    public void onReceive(Context context, Intent intent) {\r\n\r\n                        Log.d(MAIN_ACTIVITY_LOG, \"BROADCAST LISTENER FOR CONTACTS\");\r\n                        String toLog = intent.getStringExtra(\"Contact\");\r\n\r\n                        TextView tv = new TextView(MainActivity.this);\r\n                        showPopupWindow(tv, toLog);\r\n\r\n                        FrameLayout frameLayout = findViewById(R.id.contact_frame);\r\n                        frameLayout.setBackgroundColor(getResources().getColor(R.color.red));\r\n                        TextView contact_text = findViewById(R.id.contact_text);\r\n                        contact_text.setText(getResources().getString(R.string.contacts));\r\n                        ((UserStatus) MainActivity.this.getApplication()).setContacts(true);\r\n                    }\r\n                },new IntentFilter(NotificationSender.ACTION_BROADCAST)\r\n\r\n        );\r\n\r\n        //initialize heat map fragment\r\n        Fragment heatMapFragment = new HeatMap();\r\n\r\n        //start heat map fragment\r\n        getSupportFragmentManager()\r\n                .beginTransaction()\r\n                .replace(R.id.frame_heat_map_area, heatMapFragment) //insert heatMapFragment inside the area\r\n                .commit();\r\n\r\n        initBottomMenu();\r\n    }\r\n\r\n    private void initBottomMenu() {\r\n\r\n        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);\r\n        toolbar.inflateMenu(R.menu.main_menu);\r\n        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {\r\n            @Override\r\n            public boolean onMenuItemClick(MenuItem item) {\r\n                Intent i;\r\n                switch(item.getItemId()){\r\n                    case R.id.from_main_to_testing:\r\n                        i = new Intent(getApplicationContext(), TestingActivity.class);\r\n                        startActivity(i);\r\n                        return true;\r\n                    case R.id.from_main_to_info:\r\n                        i = new Intent(getApplicationContext(), InfoActivity.class);\r\n                        startActivity(i);\r\n                        return true;\r\n                    case R.id.from_main_to_db:\r\n                        i = new Intent(getApplicationContext(), UsageTestActivity.class);\r\n                        startActivity(i);\r\n                        return true;\r\n                    case R.id.from_main_to_topicMessagesScreen:\r\n                        i = new Intent(getApplicationContext(), TopicMessagesActivity.class);\r\n                        startActivity(i);\r\n                        return true;\r\n\r\n                    default:\r\n                        return MainActivity.super.onOptionsItemSelected(item);\r\n                }\r\n            }\r\n        });\r\n    }\r\n\r\n    @Override\r\n    protected void onStart() {\r\n        super.onStart();\r\n        // Bind to LocalService\r\n        Intent intent = new Intent(this, NotificationSender.class);\r\n        bindService(intent, notificationService, Context.BIND_AUTO_CREATE);\r\n\r\n    }\r\n\r\n    @RequiresApi(api = Build.VERSION_CODES.O)\r\n    protected void onResume() {\r\n        super.onResume();\r\n\r\n        /* Questo è richiesto altrimenti il main service non può partire */\r\n        // Dynamic ACCESS_FINE_LOCATION permission check (required for API 23+)\r\n        if(ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)\r\n            if (ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.ACCESS_FINE_LOCATION))\r\n                Toast.makeText(this,\"Permission to access the device's location is required for using the service\",Toast.LENGTH_SHORT).show();\r\n            else  //Compatibility purposes\r\n                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, 1);\r\n\r\n        /* FIXME: Questo si assicura che il main service giri (non è un problema se gira già) */\r\n        Intent geoTracerService = new Intent(this,GeotracerService.class);\r\n        startForegroundService(geoTracerService);\r\n\r\n\r\n        IntentFilter iff= new IntentFilter(NotificationSender.ACTION_BROADCAST);\r\n        LocalBroadcastManager.getInstance(this).registerReceiver(notificationReceiver, iff);\r\n        if(((UserStatus) this.getApplication()).getContacts()) {\r\n            FrameLayout frameLayout = findViewById(R.id.contact_frame);\r\n            frameLayout.setBackgroundColor(getResources().getColor(R.color.red));\r\n            TextView tv = findViewById(R.id.contact_text);\r\n            tv.setText(getResources().getString(R.string.contacts));\r\n        }\r\n    }\r\n\r\n    @Override\r\n    protected void onStop() {\r\n        super.onStop();\r\n\r\n        if(notificationService != null)\r\n            unbindService(notificationService);\r\n    }\r\n\r\n    @Override\r\n    protected void onPause(){\r\n        super.onPause();\r\n        LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationReceiver);\r\n    }\r\n\r\n    /** Defines callbacks for service binding, passed to bindService() */\r\n    private ServiceConnection notificationService = new ServiceConnection() {\r\n\r\n        @Override\r\n        public void onServiceConnected(ComponentName className,\r\n                                       IBinder s) {\r\n            // We've bound to LocalService, cast the IBinder and get LocalService instance\r\n            NotificationSender.LocalBinder binder = (NotificationSender.LocalBinder) s;\r\n            notificationSender = binder.getService();\r\n\r\n            Log.d(MAIN_ACTIVITY_LOG, \"AM I INFECTED: \" + String.valueOf(notificationSender.canIbeInfected()));\r\n            if(notificationSender.canIbeInfected() == OpStatus.INFECTED){\r\n                FrameLayout frameLayout = findViewById(R.id.contact_frame);\r\n                frameLayout.setBackgroundColor(getResources().getColor(R.color.red));\r\n                TextView contact_text = findViewById(R.id.contact_text);\r\n                contact_text.setText(getResources().getString(R.string.contacts));\r\n                ((UserStatus) MainActivity.this.getApplication()).setContacts(true);\r\n            }\r\n        }\r\n\r\n        @Override\r\n        public void onServiceDisconnected(ComponentName arg0) {\r\n            notificationService = null;\r\n\r\n        }\r\n    };\r\n\r\n    @Override\r\n    protected void onSaveInstanceState(@NonNull Bundle outState) {\r\n\r\n        super.onSaveInstanceState(outState);\r\n\r\n    }\r\n\r\n    @Override\r\n    protected void onRestoreInstanceState(Bundle savedInstanceState){\r\n        super.onRestoreInstanceState(savedInstanceState);\r\n\r\n    }\r\n\r\n    protected void showPopupWindow(TextView location, String message){\r\n\r\n        //instantiate the popup.xml layout file\r\n        LayoutInflater layoutInflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);\r\n\r\n        //it is used to take the resources from the popup.xml file\r\n        View customView = layoutInflater.inflate(R.layout.popup,null);\r\n\r\n        Button closePopupBtn = (Button) customView.findViewById(R.id.closePopupBtn);\r\n\r\n        //instantiate popup window\r\n        PopupWindow popupWindow = new PopupWindow(customView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);\r\n\r\n        //display the popup window\r\n        popupWindow.showAtLocation(location, Gravity.CENTER, 0, 0);\r\n\r\n\r\n        TextView popup_view = (TextView) customView.findViewById(R.id.popup_text);\r\n        popup_view.setText(message);\r\n\r\n        //close the popup window on button click\r\n        closePopupBtn.setOnClickListener(new View.OnClickListener() {\r\n            @Override\r\n            public void onClick(View v) {\r\n                popupWindow.dismiss();\r\n            }\r\n        });\r\n\r\n\r\n\r\n    }\r\n\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/geotracer/geotracer/mainapp/MainActivity.java	(revision c0015bb3fb26c505c8f685f26da9c052e53d80c2)
++++ app/src/main/java/com/geotracer/geotracer/mainapp/MainActivity.java	(date 1621490887689)
+@@ -45,7 +45,9 @@
+ import com.geotracer.geotracer.utils.generics.OpStatus;
+ import com.google.android.gms.tasks.OnCompleteListener;
+ import com.google.android.gms.tasks.Task;
+-import com.google.firebase.messaging.FirebaseMessaging;
++
++/* FIXME: Searching for stable version */
++//import com.google.firebase.messaging.FirebaseMessaging;
+ 
+ 
+ public class MainActivity extends AppCompatActivity {
+@@ -60,6 +62,7 @@
+         super.onCreate(savedInstanceState);
+         setContentView(R.layout.activity_main);
+ 
++        /* FIXME: Searching for stable version
+         //FCM
+         FirebaseMessaging.getInstance().subscribeToTopic("weather")
+                 .addOnCompleteListener(new OnCompleteListener<Void>() {
+@@ -72,7 +75,7 @@
+                         Log.d("TopicMessagesBroadcastManager", msg);
+                     }
+                 });
+-
++        */
+ 
+         //---------
+ 
+@@ -131,11 +134,13 @@
+                         i = new Intent(getApplicationContext(), UsageTestActivity.class);
+                         startActivity(i);
+                         return true;
++
++                    /* FIXME: Searching for stable version
+                     case R.id.from_main_to_topicMessagesScreen:
+                         i = new Intent(getApplicationContext(), TopicMessagesActivity.class);
+                         startActivity(i);
+                         return true;
+-
++                    */
+                     default:
+                         return MainActivity.super.onOptionsItemSelected(item);
+                 }
+Index: app/src/main/java/com/geotracer/geotracer/UsageTestActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.geotracer.geotracer;\r\n\r\nimport androidx.appcompat.app.AppCompatActivity;\r\nimport androidx.localbroadcastmanager.content.LocalBroadcastManager;\r\n\r\nimport android.content.BroadcastReceiver;\r\nimport android.content.ComponentName;\r\nimport android.content.Context;\r\nimport android.content.Intent;\r\nimport android.content.IntentFilter;\r\nimport android.content.ServiceConnection;\r\nimport android.os.Bundle;\r\nimport android.os.IBinder;\r\nimport android.util.Log;\r\nimport android.view.Gravity;\r\nimport android.view.LayoutInflater;\r\nimport android.view.Menu;\r\nimport android.view.MenuItem;\r\nimport android.view.View;\r\nimport android.widget.Button;\r\nimport android.widget.EditText;\r\nimport android.widget.FrameLayout;\r\nimport android.widget.LinearLayout;\r\nimport android.widget.PopupWindow;\r\nimport android.widget.RadioButton;\r\nimport android.widget.TextView;\r\n\r\nimport java.util.List;\r\nimport java.util.logging.Logger;\r\nimport com.geotracer.geotracer.db.local.KeyValueManagement;\r\nimport com.geotracer.geotracer.db.remote.FirestoreManagement;\r\nimport com.geotracer.geotracer.infoapp.InfoActivity;\r\nimport com.geotracer.geotracer.mainapp.MainActivity;\r\nimport com.geotracer.geotracer.notifications.NotificationSender;\r\nimport com.geotracer.geotracer.testingapp.LogService;\r\nimport com.geotracer.geotracer.utils.data.BaseLocation;\r\nimport com.geotracer.geotracer.utils.data.ExtLocation;\r\nimport com.geotracer.geotracer.utils.data.ExtSignature;\r\nimport com.geotracer.geotracer.utils.data.Signature;\r\nimport com.geotracer.geotracer.utils.generics.OpStatus;\r\nimport com.geotracer.geotracer.utils.generics.RetStatus;\r\nimport com.google.firebase.firestore.GeoPoint;\r\n\r\nimport org.json.JSONArray;\r\n\r\npublic class UsageTestActivity extends AppCompatActivity {\r\n\r\n        boolean bound;\r\n        BroadcastReceiver onNotice;\r\n        private KeyValueManagement keyValueStore;\r\n        private NotificationSender notificationSender;\r\n        private FirestoreManagement firestore;\r\n\r\n        private final Logger logger = Logger.getGlobal();\r\n\r\n        private final ServiceConnection keyValueService = new ServiceConnection() {\r\n\r\n            @Override\r\n            public void onServiceConnected(ComponentName className, IBinder service) {\r\n\r\n                KeyValueManagement.LocalBinder binder = (KeyValueManagement.LocalBinder) service;\r\n                keyValueStore = binder.getService();\r\n\r\n            }\r\n\r\n            @Override\r\n            public void onServiceDisconnected(ComponentName arg0) {\r\n\r\n                keyValueStore = null;\r\n\r\n            }\r\n        };\r\n\r\n        private final ServiceConnection notificationService = new ServiceConnection() {\r\n\r\n            @Override\r\n            public void onServiceConnected(ComponentName className, IBinder service) {\r\n\r\n                NotificationSender.LocalBinder binder = (NotificationSender.LocalBinder) service;\r\n                notificationSender = binder.getService();\r\n                bound = true;\r\n\r\n            }\r\n\r\n          @Override\r\n            public void onServiceDisconnected(ComponentName arg0) {\r\n\r\n                notificationSender = null;\r\n                bound = false;\r\n\r\n            }\r\n        };\r\n\r\n\r\n    private final ServiceConnection firestoreService = new ServiceConnection() {\r\n\r\n        @Override\r\n        public void onServiceConnected(ComponentName className, IBinder service) {\r\n\r\n            FirestoreManagement.LocalBinder binder = (FirestoreManagement.LocalBinder) service;\r\n            firestore = binder.getService();\r\n\r\n        }\r\n\r\n        @Override\r\n        public void onServiceDisconnected(ComponentName arg0) {\r\n\r\n            firestore = null;\r\n\r\n        }\r\n    };\r\n\r\n        @Override\r\n        protected void onCreate(Bundle savedInstanceState) {\r\n\r\n            super.onCreate(savedInstanceState);\r\n\r\n            setContentView(R.layout.testing_main);\r\n            Intent intent = new Intent(this, KeyValueManagement.class);\r\n            bindService(intent, keyValueService, Context.BIND_AUTO_CREATE);\r\n\r\n            intent = new Intent(this, NotificationSender.class);\r\n            bindService(intent, notificationService, Context.BIND_AUTO_CREATE);\r\n\r\n            intent = new Intent(this, FirestoreManagement.class);\r\n            bindService(intent, firestoreService, Context.BIND_AUTO_CREATE);\r\n\r\n            logger.info(\"[TEST] KeyValueDb Service started\");\r\n\r\n            LocalBroadcastManager.getInstance(UsageTestActivity.this).registerReceiver(\r\n                    onNotice = new BroadcastReceiver() {\r\n                        @Override\r\n                        public void onReceive(Context context, Intent intent) {\r\n\r\n                            Log.i(this.getClass().getName(), \"BROADCAST LISTENER FOR CONTACTS\");\r\n                            String toLog = intent.getStringExtra(\"Contact\");\r\n\r\n                            TextView tv = new TextView(UsageTestActivity.this);\r\n                            if(tv == null)\r\n                                Log.d(this.getClass().getName() + \"BROADCAST LISTENER FOR CONTACTS\", \"Empty location\");\r\n                            else\r\n                                showPopupWindow(tv, toLog);\r\n\r\n                            FrameLayout frameLayout = findViewById(R.id.contact_frame);\r\n                            frameLayout.setBackgroundColor(getResources().getColor(R.color.red));\r\n                            TextView contact_text = findViewById(R.id.contact_text);\r\n                            contact_text.setText(getResources().getString(R.string.contacts));\r\n                            ((UserStatus) UsageTestActivity.this.getApplication()).setContacts(true);\r\n                        }\r\n                    },new IntentFilter(LogService.ACTION_BROADCAST)\r\n\r\n            );\r\n\r\n\r\n\r\n        }\r\n\r\n\r\n    @Override\r\n    protected void onStop() {\r\n        super.onStop();\r\n        unbindService(notificationService);\r\n        bound = false;\r\n    }\r\n\r\n    protected void onResume() {\r\n        super.onResume();\r\n\r\n        IntentFilter iff= new IntentFilter(NotificationSender.ACTION_BROADCAST);\r\n        LocalBroadcastManager.getInstance(this).registerReceiver(onNotice, iff);\r\n\r\n        if(((UserStatus) this.getApplication()).getContacts()) {\r\n            FrameLayout frameLayout = findViewById(R.id.contact_frame);\r\n            frameLayout.setBackgroundColor(getResources().getColor(R.color.red));\r\n            TextView tv = findViewById(R.id.contact_text);\r\n            tv.setText(getResources().getString(R.string.contacts));\r\n        }\r\n    }\r\n\r\n    @Override\r\n    protected void onPause(){\r\n        super.onPause();\r\n        LocalBroadcastManager.getInstance(this).unregisterReceiver(onNotice);\r\n    }\r\n\r\n\r\n    @Override\r\n        protected void onDestroy(){\r\n            super.onDestroy();\r\n            unbindService(keyValueService);\r\n        }\r\n\r\n        public void insertBeacon(View view){\r\n\r\n            String beacon = ((EditText)findViewById(R.id.beacon_add)).getText().toString();\r\n            OpStatus status = keyValueStore.beacons.insertBeacon(new ExtSignature(beacon,10));\r\n            Log.println(Log.INFO,\"TEST\",\"Insert Beacon Status: \" + status.toString());\r\n        }\r\n\r\n        public void insertBucket(View view){\r\n            String bucket = ((EditText)findViewById(R.id.bucket_add)).getText().toString();\r\n            keyValueStore.buckets.insertBucket(bucket);\r\n        }\r\n\r\n        public void insertSignature(View view){\r\n            String signature = ((EditText)findViewById(R.id.signature_input)).getText().toString();\r\n            OpStatus status = keyValueStore.signatures.insertSignature(new Signature(signature));\r\n            Log.println(Log.INFO,\"TEST\",\"Insert Beacon Status: \" + status.toString());\r\n        }\r\n\r\n        public void insertPosition(View view){\r\n            String latitude = ((EditText)findViewById(R.id.latitude)).getText().toString();\r\n            String longitude = ((EditText)findViewById(R.id.longitude)).getText().toString();\r\n            OpStatus status = keyValueStore.positions.insertOrUpdatePosition(new BaseLocation(new GeoPoint(Float.parseFloat(latitude), Float.parseFloat(longitude))));\r\n            Log.println(Log.INFO,\"TEST\",\"Insert Beacon Status: \" + status.toString());\r\n        }\r\n\r\n        public void insertExtPosition(View view){\r\n            double latitude = Double.parseDouble(((EditText)findViewById(R.id.ext_latitude)).getText().toString());\r\n            double longitude = Double.parseDouble(((EditText)findViewById(R.id.ext_longitude)).getText().toString());\r\n            ExtLocation location = new ExtLocation(new GeoPoint(latitude,longitude));\r\n            if(((RadioButton)findViewById(R.id.insert_ext_loc)).isChecked()){\r\n                location.setCriticity(1);\r\n                location.setInfected();\r\n\r\n            }else{\r\n                Integer criticity = Integer.parseInt(((EditText)findViewById(R.id.criticity)).getText().toString());\r\n                location.setCriticity(criticity);\r\n            }\r\n\r\n            firestore.testInsertLocation(location);\r\n            Log.println(Log.INFO,\"TEST\",\"Insert Beacon Status: \" + location.getGeoHash());\r\n\r\n        }\r\n\r\n        public void getBeacon(View view){\r\n            String beacon = ((EditText)findViewById(R.id.beacon_search)).getText().toString();\r\n            ((TextView)findViewById(R.id.display)).setText(keyValueStore.beacons.beaconPresent(beacon).toString());\r\n        }\r\n\r\n        public void getBuckets(View view){\r\n            JSONArray jsonArray = new JSONArray(keyValueStore.buckets.getBuckets().getValue());\r\n            ((TextView)findViewById(R.id.display_buckets)).setText(jsonArray.toString());\r\n        }\r\n\r\n        public void getSignatures(View view){\r\n            StringBuilder put = new StringBuilder();\r\n            RetStatus<List<Signature>> ret = keyValueStore.signatures.getAllSignatures();\r\n            if( ret.getStatus() != OpStatus.OK)\r\n                return;\r\n            List<Signature> signatures = ret.getValue();\r\n            for( Signature signature: signatures)\r\n                put.append(signature.getSignature()).append(\"\\n\");\r\n            ((TextView)findViewById(R.id.display_signatures)).setText(put);\r\n\r\n        }\r\n\r\n        public void getPositions(View view){\r\n            StringBuilder put = new StringBuilder();\r\n            RetStatus<List<BaseLocation>> ret = keyValueStore.positions.getAllPositions();\r\n            if( ret.getStatus() != OpStatus.OK)\r\n                return;\r\n            List<BaseLocation> signatures = ret.getValue();\r\n            for( BaseLocation signature: signatures)\r\n                put.append(signature.getLocation()).append(\"\\n\");\r\n            ((TextView)findViewById(R.id.display_positions)).setText(put);\r\n        }\r\n\r\n        public void getExtLocations(View view){\r\n            double latitude = Double.parseDouble(((EditText)findViewById(R.id.getExtLatitude)).getText().toString());\r\n            double longitude = Double.parseDouble(((EditText)findViewById(R.id.getExtLongitude)).getText().toString());\r\n            ExtLocation location = new ExtLocation(new GeoPoint(latitude,longitude));\r\n            firestore.getNearLocations(new GeoPoint(latitude,longitude),5000);\r\n\r\n        }\r\n\r\n        public void sendAlert(View view){\r\n            RetStatus<List<BaseLocation>> positions = keyValueStore.positions.getAllPositions();\r\n            notificationSender.infectionAlert();\r\n            if( positions.getStatus() == OpStatus.OK)\r\n                firestore.insertInfectedLocations(positions.getValue());\r\n        }\r\n\r\n    @Override\r\n    public boolean onCreateOptionsMenu(Menu menu){\r\n        getMenuInflater().inflate(R.menu.db_menu, menu);\r\n        return true;\r\n    }\r\n\r\n    @Override\r\n    public boolean onOptionsItemSelected(MenuItem item){\r\n        TextView tv;\r\n        Intent i;\r\n        switch(item.getItemId()){\r\n            case R.id.from_DB_to_main:\r\n                i = new Intent(this, MainActivity.class);\r\n                startActivity(i);\r\n                return true;\r\n            case R.id.from_DB_to_testing:\r\n                i = new Intent(this, TestingActivityOld.class);\r\n                startActivity(i);\r\n                return true;\r\n            case R.id.from_DB_to_info:\r\n                i = new Intent(this, InfoActivity.class);\r\n                startActivity(i);\r\n                return true;\r\n\r\n            default:\r\n                return super.onOptionsItemSelected(item);\r\n        }\r\n    }\r\n\r\n\r\n    protected void showPopupWindow(TextView location, String message){\r\n\r\n        //instantiate the popup.xml layout file\r\n        LayoutInflater layoutInflater = (LayoutInflater) UsageTestActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);\r\n\r\n        //it is used to take the resources from the popup.xml file\r\n        View customView = layoutInflater.inflate(R.layout.popup,null);\r\n\r\n        Button closePopupBtn = (Button) customView.findViewById(R.id.closePopupBtn);\r\n\r\n        //instantiate popup window\r\n        PopupWindow popupWindow = new PopupWindow(customView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);\r\n\r\n        //display the popup window\r\n        popupWindow.showAtLocation(location, Gravity.CENTER, 0, 0);\r\n\r\n\r\n        TextView popup_view = (TextView) customView.findViewById(R.id.popup_text);\r\n        popup_view.setText(message);\r\n\r\n        //close the popup window on button click\r\n        closePopupBtn.setOnClickListener(new View.OnClickListener() {\r\n            @Override\r\n            public void onClick(View v) {\r\n                popupWindow.dismiss();\r\n            }\r\n        });\r\n\r\n\r\n\r\n    }\r\n\r\n\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/geotracer/geotracer/UsageTestActivity.java	(revision c0015bb3fb26c505c8f685f26da9c052e53d80c2)
++++ app/src/main/java/com/geotracer/geotracer/UsageTestActivity.java	(date 1621491015839)
+@@ -296,10 +296,6 @@
+                 i = new Intent(this, MainActivity.class);
+                 startActivity(i);
+                 return true;
+-            case R.id.from_DB_to_testing:
+-                i = new Intent(this, TestingActivityOld.class);
+-                startActivity(i);
+-                return true;
+             case R.id.from_DB_to_info:
+                 i = new Intent(this, InfoActivity.class);
+                 startActivity(i);
+Index: app/src/main/java/com/geotracer/geotracer/settingapp/SettingActivity.java
+===================================================================
+--- app/src/main/java/com/geotracer/geotracer/settingapp/SettingActivity.java	(revision c0015bb3fb26c505c8f685f26da9c052e53d80c2)
++++ app/src/main/java/com/geotracer/geotracer/settingapp/SettingActivity.java	(revision c0015bb3fb26c505c8f685f26da9c052e53d80c2)
+@@ -1,395 +0,0 @@
+-package com.geotracer.geotracer.settingapp;
+-
+-import android.content.BroadcastReceiver;
+-import android.content.ComponentName;
+-import android.content.Context;
+-import android.content.Intent;
+-import android.content.IntentFilter;
+-import android.content.ServiceConnection;
+-import android.os.Build;
+-import android.os.Bundle;
+-import android.os.IBinder;
+-import android.util.Log;
+-import android.view.Gravity;
+-import android.view.LayoutInflater;
+-import android.view.MenuItem;
+-import android.view.View;
+-import android.widget.Button;
+-import android.widget.CompoundButton;
+-import android.widget.FrameLayout;
+-import android.widget.LinearLayout;
+-import android.widget.PopupWindow;
+-import android.widget.Switch;
+-import android.widget.TextView;
+-
+-import androidx.annotation.NonNull;
+-import androidx.annotation.RequiresApi;
+-import androidx.appcompat.app.AppCompatActivity;
+-import androidx.appcompat.widget.Toolbar;
+-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+-
+-import com.geotracer.geotracer.R;
+-import com.geotracer.geotracer.UserStatus;
+-import com.geotracer.geotracer.db.local.KeyValueManagement;
+-import com.geotracer.geotracer.db.remote.FirestoreManagement;
+-import com.geotracer.geotracer.infoapp.InfoActivity;
+-import com.geotracer.geotracer.mainapp.MainActivity;
+-import com.geotracer.geotracer.notifications.NotificationSender;
+-import com.geotracer.geotracer.service.GeotracerService;
+-import com.geotracer.geotracer.utils.data.BaseLocation;
+-import com.geotracer.geotracer.utils.generics.OpStatus;
+-import com.geotracer.geotracer.utils.generics.RetStatus;
+-
+-import java.util.List;
+-
+-public class SettingActivity extends AppCompatActivity {
+-
+-
+-    NotificationSender notificationSender;
+-    BroadcastReceiver notificationBroadcast;
+-    FirestoreManagement firestoreManagement;
+-    private KeyValueManagement keyValueStore;
+-    GeotracerService geotracerMainService;
+-    public static final String SETTING_ACTIVITY_LOG = "SettingActivity";
+-
+-    @Override
+-    protected void onCreate(Bundle savedInstanceState) {
+-        super.onCreate(savedInstanceState);
+-        setContentView(R.layout.activity_setting);
+-
+-        /*
+-
+-        BROADCAST LISTENER FOR CONTACTS
+-         */
+-
+-        LocalBroadcastManager.getInstance(SettingActivity.this).registerReceiver(
+-                notificationBroadcast = new BroadcastReceiver() {
+-                    @Override
+-                    public void onReceive(Context context, Intent intent) {
+-
+-                        Log.d(SETTING_ACTIVITY_LOG, "BROADCAST LISTENER FOR CONTACTS");
+-                        String toLog = intent.getStringExtra("Contact");
+-
+-                        TextView tv = new TextView(SettingActivity.this);
+-                        if(tv == null)
+-                            Log.d(SETTING_ACTIVITY_LOG, "BROADCAST LISTENER FOR CONTACTS: Empty location");
+-                        else
+-                            showPopupWindow(tv, toLog);
+-
+-                        FrameLayout frameLayout = findViewById(R.id.contact_frame);
+-                        frameLayout.setBackgroundColor(getResources().getColor(R.color.red));
+-                        TextView contact_text = findViewById(R.id.contact_text);
+-                        contact_text.setText(getResources().getString(R.string.contacts));
+-                        ((UserStatus) SettingActivity.this.getApplication()).setContacts(true);
+-                    }
+-                },new IntentFilter(NotificationSender.ACTION_BROADCAST)
+-
+-        );
+-
+-        /*
+-
+-        LISTENER FOR SWITCH BUTTONS
+-         */
+-
+-        Switch proximity_notifications = (Switch) findViewById(R.id.notification_proximity);
+-        proximity_notifications.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+-                if(isChecked){
+-                    //ENABLE THE RECEIVING OF NOTIFICATION FOR BEING TOO CLOSE TO OTHER PEOPLE
+-
+-                    /* FIXME */
+-                    if(geotracerMainService != null)
+-                    {
+-                        boolean result = geotracerMainService.enableProximityWarnings();
+-                        if(result)
+-                            Log.d(SETTING_ACTIVITY_LOG, "Proximity Warning Notifications Enabled");
+-                        else
+-                            Log.d(SETTING_ACTIVITY_LOG, "Proximity Warning Notifications Enabled Already Enabled");
+-                    }
+-                    else
+-                        Log.w(SETTING_ACTIVITY_LOG, "Geotracer main service is unbound!");
+-
+-
+-                }else{
+-                    //DISABLE THE RECEIVING OF NOTIFICATION FOR BEING TOO CLOSE TO OTHER PEOPLE
+-
+-                    /* FIXME */
+-                    if(geotracerMainService != null)
+-                    {
+-                        boolean result = geotracerMainService.disableProximityWarnings();
+-                        if(result)
+-                            Log.d(SETTING_ACTIVITY_LOG, "Proximity Warning Notifications Disabled");
+-                        else
+-                            Log.d(SETTING_ACTIVITY_LOG, "Proximity Warning Notifications Already Disabled");
+-                    }
+-                    else
+-                        Log.w(SETTING_ACTIVITY_LOG, "Geotracer main service is unbound!");
+-
+-                    /*
+-                    disableProximityWarnings()
+-                     */
+-                    Log.d(SETTING_ACTIVITY_LOG, "Proximity Notification Disabled");
+-                }
+-            }
+-        });
+-
+-        Switch positivity_switch = (Switch) findViewById(R.id.positivity_report);
+-        positivity_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+-                if(isChecked){
+-                    //ENABLE THE RECEIVING OF NOTIFICATION FOR BEING TOO CLOSE TO OTHER PEOPLE
+-
+-
+-                    RetStatus<List<BaseLocation>> userPositions = keyValueStore.positions.getAllPositions();
+-                    if(userPositions.getStatus() == OpStatus.OK){
+-                        firestoreManagement.insertInfectedLocations(userPositions.getValue());
+-                        notificationSender.infectionAlert();
+-                        Log.d(SETTING_ACTIVITY_LOG, "Positivity Report Enabled");
+-                    }
+-
+-
+-                }else{
+-                    //DISABLE THE RECEIVING OF NOTIFICATION FOR BEING TOO CLOSE TO OTHER PEOPLE
+-                    Log.d(SETTING_ACTIVITY_LOG, "Positivity Report Disabled");
+-                }
+-            }
+-        });
+-
+-        initBottomMenu();
+-
+-    }
+-
+-
+-    private void initBottomMenu() {
+-
+-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+-        toolbar.inflateMenu(R.menu.setting_menu);
+-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+-            @Override
+-            public boolean onMenuItemClick(MenuItem item) {
+-                TextView tv;
+-                Intent i;
+-                switch (item.getItemId()) {
+-                    case R.id.from_setting_to_main:
+-                        i = new Intent(getApplicationContext(), MainActivity.class);
+-                        startActivity(i);
+-                        return true;
+-                    case R.id.from_setting_to_testing:
+-                        i = new Intent(getApplicationContext(), TestingActivityOld.class);
+-                        startActivity(i);
+-                        return true;
+-                    case R.id.from_setting_to_info:
+-                        i = new Intent(getApplicationContext(), InfoActivity.class);
+-                        startActivity(i);
+-                        return true;
+-
+-                    default:
+-                        return SettingActivity.super.onOptionsItemSelected(item);
+-                }
+-            }
+-        });
+-    }
+-
+-    @Override
+-    protected void onStart() {
+-        super.onStart();
+-
+-        // Bind to service for contact notifications
+-        Intent intent = new Intent(this, NotificationSender.class);
+-        bindService(intent, notificationService, Context.BIND_AUTO_CREATE);
+-
+-        //Bind service for KeyValue management
+-        intent = new Intent(this, KeyValueManagement.class);
+-        bindService(intent, keyValueService, Context.BIND_AUTO_CREATE);
+-
+-        //Bind service for firestore management
+-        intent = new Intent(this, FirestoreManagement.class);
+-        bindService(intent, firestoreService, Context.BIND_AUTO_CREATE);
+-
+-        //Bind main application service
+-        intent = new Intent(this, GeotracerService.class);
+-        bindService(intent, geotracerService, Context.BIND_AUTO_CREATE);
+-
+-    }
+-
+-    @RequiresApi(api = Build.VERSION_CODES.O)
+-    protected void onResume() {
+-        super.onResume();
+-
+-        /* FIXME: Questo si assicura che il main service giri (non è un problema se gira già) */
+-        Intent geoTracerService = new Intent(this,GeotracerService.class);
+-        startForegroundService(geoTracerService);
+-
+-        //REGISTRATION TO NOTIFICATION SERVICE
+-        IntentFilter iff= new IntentFilter(NotificationSender.ACTION_BROADCAST);
+-        LocalBroadcastManager.getInstance(this).registerReceiver(notificationBroadcast, iff);
+-
+-        //CHECK THE CONTACT STATUS AND SET THE RELATIVE LAYOUT
+-        if(((UserStatus) this.getApplication()).getContacts()) {
+-            FrameLayout frameLayout = findViewById(R.id.contact_frame);
+-            frameLayout.setBackgroundColor(getResources().getColor(R.color.red));
+-            TextView tv = findViewById(R.id.contact_text);
+-            tv.setText(getResources().getString(R.string.contacts));
+-        }
+-    }
+-
+-    @Override
+-    protected void onPause(){
+-        super.onPause();
+-        //DEREGISTER FROM THE NOTIFICATION SERVICE
+-        LocalBroadcastManager.getInstance(this).unregisterReceiver(notificationBroadcast);
+-    }
+-
+-    @Override
+-    protected void onStop() {
+-        super.onStop();
+-        //UNBIND ALL SERVICES
+-        if(notificationService != null)
+-            unbindService(notificationService);
+-
+-        if(keyValueService != null)
+-            unbindService(keyValueService);
+-
+-        if(firestoreService != null)
+-            unbindService(firestoreService);
+-
+-        if(geotracerMainService != null)
+-            unbindService(geotracerService);
+-
+-    }
+-
+-    //ESTALISH A CONNECTION WITH NOTIFICATION SERVICE AND DO BIND
+-    private ServiceConnection notificationService = new ServiceConnection() {
+-
+-        @Override
+-        public void onServiceConnected(ComponentName className,
+-                                       IBinder s) {
+-            // We've bound to LocalService, cast the IBinder and get LocalService instance
+-            NotificationSender.LocalBinder binder = (NotificationSender.LocalBinder) s;
+-            notificationSender = binder.getService();
+-        }
+-
+-        @Override
+-        public void onServiceDisconnected(ComponentName arg0) {
+-
+-            notificationSender = null;
+-        }
+-    };
+-
+-
+-
+-    //BIND TO KEY VALUE MANAGER SERVICE
+-    private final ServiceConnection keyValueService = new ServiceConnection() {
+-
+-        @Override
+-        public void onServiceConnected(ComponentName className, IBinder service) {
+-
+-            KeyValueManagement.LocalBinder binder = (KeyValueManagement.LocalBinder) service;
+-            keyValueStore = binder.getService();
+-
+-        }
+-
+-        @Override
+-        public void onServiceDisconnected(ComponentName arg0) {
+-
+-            keyValueStore = null;
+-
+-        }
+-    };
+-
+-    //BIND TO FIRESTORE MANAGEMENT SERVICE
+-    private final ServiceConnection firestoreService = new ServiceConnection() {
+-
+-        @Override
+-        public void onServiceConnected(ComponentName className, IBinder service) {
+-
+-            FirestoreManagement.LocalBinder binder = (FirestoreManagement.LocalBinder) service;
+-            firestoreManagement = binder.getService();
+-
+-        }
+-
+-        @Override
+-        public void onServiceDisconnected(ComponentName arg0) {
+-
+-            firestoreManagement = null;
+-
+-        }
+-    };
+-
+-    /* FIXME */
+-    //BIND TO APPLICATION MAIN SERVICE
+-    private final ServiceConnection geotracerService = new ServiceConnection() {
+-
+-        @Override
+-        public void onServiceConnected(ComponentName className, IBinder service) {
+-
+-            GeotracerService.GeotracerBinder binder = (GeotracerService.GeotracerBinder) service;
+-            geotracerMainService = binder.getService();
+-
+-            Switch s = findViewById(R.id.notification_proximity);
+-            if(geotracerMainService.isProximityNotificationEnabled()){
+-                //set the switch button to enabled.
+-                s.setChecked(true);
+-            }else{
+-                s.setChecked(false);
+-            }
+-
+-        }
+-
+-        @Override
+-        public void onServiceDisconnected(ComponentName arg0) {
+-
+-            geotracerMainService = null;
+-
+-        }
+-    };
+-
+-
+-    //FUNCTION TO SHOW THE POPUP WINDOW IN CASE CONTACT NOTIFICATION IS ARISEN
+-    protected void showPopupWindow(TextView location, String message){
+-
+-        //instantiate the popup.xml layout file
+-        LayoutInflater layoutInflater = (LayoutInflater) SettingActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+-
+-        //it is used to take the resources from the popup.xml file
+-        View customView = layoutInflater.inflate(R.layout.popup,null);
+-
+-        Button closePopupBtn = (Button) customView.findViewById(R.id.closePopupBtn);
+-
+-        //instantiate popup window
+-        PopupWindow popupWindow = new PopupWindow(customView, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+-
+-        //display the popup window
+-        popupWindow.showAtLocation(location, Gravity.CENTER, 0, 0);
+-
+-
+-        TextView popup_view = (TextView) customView.findViewById(R.id.popup_text);
+-        popup_view.setText(message);
+-
+-        //close the popup window on button click
+-        closePopupBtn.setOnClickListener(new View.OnClickListener() {
+-            @Override
+-            public void onClick(View v) {
+-                popupWindow.dismiss();
+-            }
+-        });
+-
+-
+-
+-    }
+-
+-    @Override
+-    protected void onSaveInstanceState(@NonNull Bundle outState) {
+-
+-        super.onSaveInstanceState(outState);
+-    }
+-
+-    @Override
+-    protected void onRestoreInstanceState(Bundle savedInstanceState){
+-        super.onRestoreInstanceState(savedInstanceState);
+-
+-    }
+-
+-
+-
+-}
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AndroidLayouts\">\r\n    <shared>\r\n      <config />\r\n    </shared>\r\n  </component>\r\n  <component name=\"AndroidLogFilters\">\r\n    <option name=\"TOOL_WINDOW_LOG_LEVEL\" value=\"verbose\" />\r\n    <option name=\"TOOL_WINDOW_CONFIGURED_FILTER\" value=\"Show only selected application\" />\r\n  </component>\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"NONE\" />\r\n  </component>\r\n  <component name=\"BranchesTreeState\">\r\n    <expand>\r\n      <path>\r\n        <item name=\"ROOT\" type=\"e8cecc67:BranchNodeDescriptor\" />\r\n        <item name=\"LOCAL_ROOT\" type=\"e8cecc67:BranchNodeDescriptor\" />\r\n      </path>\r\n      <path>\r\n        <item name=\"ROOT\" type=\"e8cecc67:BranchNodeDescriptor\" />\r\n        <item name=\"REMOTE_ROOT\" type=\"e8cecc67:BranchNodeDescriptor\" />\r\n      </path>\r\n      <path>\r\n        <item name=\"ROOT\" type=\"e8cecc67:BranchNodeDescriptor\" />\r\n        <item name=\"REMOTE_ROOT\" type=\"e8cecc67:BranchNodeDescriptor\" />\r\n        <item name=\"GROUP_NODE:origin\" type=\"e8cecc67:BranchNodeDescriptor\" />\r\n      </path>\r\n    </expand>\r\n    <select />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"6ea0b472-2ab6-4806-a1a1-f1653b5edd79\" name=\"Default Changelist\" comment=\"Main Service Merging Completed (&quot;Other Positions&quot; insertion disabled)\">\r\n      <change afterPath=\"$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/utils/HashValues.java\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/testingapp/TestingActivity.java\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/testingapp/TestingActivity.java\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/utils/LogParsing.java\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/utils/LogParsing.java\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"ExecutionTargetManager\" SELECTED_TARGET=\"device_and_snapshot_combo_box_target[SerialNumber@GSM9X18815W02087]\" />\r\n  <component name=\"ExternalProjectsData\">\r\n    <projectState path=\"$PROJECT_DIR$\">\r\n      <ProjectState />\r\n    </projectState>\r\n  </component>\r\n  <component name=\"ExternalProjectsManager\">\r\n    <system id=\"GRADLE\">\r\n      <state>\r\n        <projects_view>\r\n          <tree_state>\r\n            <expand />\r\n            <select />\r\n          </tree_state>\r\n        </projects_view>\r\n      </state>\r\n    </system>\r\n  </component>\r\n  <component name=\"FileTemplateManagerImpl\">\r\n    <option name=\"RECENT_TEMPLATES\">\r\n      <list>\r\n        <option value=\"layoutResourceFile\" />\r\n        <option value=\"resourceFile\" />\r\n        <option value=\"Class\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"PREVIOUS_COMMIT_AUTHORS\">\r\n      <list>\r\n        <option value=\"GiulioFederico\" />\r\n      </list>\r\n    </option>\r\n    <option name=\"RECENT_BRANCH_BY_REPOSITORY\">\r\n      <map>\r\n        <entry key=\"$PROJECT_DIR$/..\" value=\"main\" />\r\n      </map>\r\n    </option>\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$/..\" />\r\n  </component>\r\n  <component name=\"ProjectId\" id=\"1sDi9ylUomX2mi7GkwvKTHd6WfE\" />\r\n  <component name=\"ProjectLevelVcsManager\" settingsEditedManually=\"true\">\r\n    <ConfirmationsSetting value=\"2\" id=\"Add\" />\r\n  </component>\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\">\r\n    <property name=\"DeviceAndSnapshotComboBoxAction.selectedDevice\" value=\"MVS4C19A16008858\" />\r\n    <property name=\"DeviceAndSnapshotComboBoxAction.selectionTime\" value=\"2021-05-18T08:10:30.960Z\" />\r\n    <property name=\"RunOnceActivity.OpenProjectViewOnStart\" value=\"true\" />\r\n    <property name=\"last_opened_file_path\" value=\"$PROJECT_DIR$\" />\r\n    <property name=\"memory.settings.postsync.last.time.stamp\" value=\"1620650065911\" />\r\n    <property name=\"project.structure.last.edited\" value=\"Modules\" />\r\n    <property name=\"project.structure.proportion\" value=\"0.17\" />\r\n    <property name=\"project.structure.side.proportion\" value=\"0.2\" />\r\n    <property name=\"settings.editor.selected.configurable\" value=\"preferences.pluginManager\" />\r\n  </component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"CopyFile.RECENT_KEYS\">\r\n      <recent name=\"$PROJECT_DIR$/app/src/main/res\" />\r\n      <recent name=\"$PROJECT_DIR$/app/src/main/res/drawable\" />\r\n      <recent name=\"$PROJECT_DIR$/app/src/main/res/layout\" />\r\n      <recent name=\"C:\\Users\\Riccardo\\Documents\\GitHub\\GeoTracker\\GeoTracer\\app\\src\\main\\java\\com\\geotracer\\geotracer\" />\r\n      <recent name=\"$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer\" />\r\n    </key>\r\n    <key name=\"CopyClassDialog.RECENTS_KEY\">\r\n      <recent name=\"com.geotracer.geotracer.mainapp.heatMap\" />\r\n      <recent name=\"com.geotracer.geotracer.db.remote\" />\r\n    </key>\r\n    <key name=\"MoveFile.RECENT_KEYS\">\r\n      <recent name=\"$PROJECT_DIR$/app\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"RunManager\">\r\n    <configuration default=\"true\" type=\"AndroidJUnit\" factoryName=\"Android JUnit\">\r\n      <option name=\"TEST_OBJECT\" value=\"class\" />\r\n      <option name=\"WORKING_DIRECTORY\" value=\"$MODULE_DIR$\" />\r\n      <method v=\"2\">\r\n        <option name=\"Android.Gradle.BeforeRunTask\" enabled=\"true\" />\r\n      </method>\r\n    </configuration>\r\n    <configuration name=\"app\" type=\"AndroidRunConfigurationType\" factoryName=\"Android App\" activateToolWindowBeforeRun=\"false\">\r\n      <module name=\"GeoTracer.app\" />\r\n      <option name=\"DEPLOY\" value=\"true\" />\r\n      <option name=\"DEPLOY_APK_FROM_BUNDLE\" value=\"false\" />\r\n      <option name=\"DEPLOY_AS_INSTANT\" value=\"false\" />\r\n      <option name=\"ARTIFACT_NAME\" value=\"\" />\r\n      <option name=\"PM_INSTALL_OPTIONS\" value=\"\" />\r\n      <option name=\"ALL_USERS\" value=\"false\" />\r\n      <option name=\"ALWAYS_INSTALL_WITH_PM\" value=\"false\" />\r\n      <option name=\"DYNAMIC_FEATURES_DISABLED_LIST\" value=\"\" />\r\n      <option name=\"ACTIVITY_EXTRA_FLAGS\" value=\"\" />\r\n      <option name=\"MODE\" value=\"default_activity\" />\r\n      <option name=\"CLEAR_LOGCAT\" value=\"false\" />\r\n      <option name=\"SHOW_LOGCAT_AUTOMATICALLY\" value=\"false\" />\r\n      <option name=\"SKIP_NOOP_APK_INSTALLATIONS\" value=\"true\" />\r\n      <option name=\"FORCE_STOP_RUNNING_APP\" value=\"true\" />\r\n      <option name=\"TARGET_SELECTION_MODE\" value=\"DEVICE_AND_SNAPSHOT_COMBO_BOX\" />\r\n      <option name=\"SELECTED_CLOUD_MATRIX_CONFIGURATION_ID\" value=\"-1\" />\r\n      <option name=\"SELECTED_CLOUD_MATRIX_PROJECT_ID\" value=\"\" />\r\n      <option name=\"DEBUGGER_TYPE\" value=\"Auto\" />\r\n      <Auto>\r\n        <option name=\"USE_JAVA_AWARE_DEBUGGER\" value=\"false\" />\r\n        <option name=\"SHOW_STATIC_VARS\" value=\"true\" />\r\n        <option name=\"WORKING_DIR\" value=\"\" />\r\n        <option name=\"TARGET_LOGGING_CHANNELS\" value=\"lldb process:gdb-remote packets\" />\r\n        <option name=\"SHOW_OPTIMIZED_WARNING\" value=\"true\" />\r\n      </Auto>\r\n      <Hybrid>\r\n        <option name=\"USE_JAVA_AWARE_DEBUGGER\" value=\"false\" />\r\n        <option name=\"SHOW_STATIC_VARS\" value=\"true\" />\r\n        <option name=\"WORKING_DIR\" value=\"\" />\r\n        <option name=\"TARGET_LOGGING_CHANNELS\" value=\"lldb process:gdb-remote packets\" />\r\n        <option name=\"SHOW_OPTIMIZED_WARNING\" value=\"true\" />\r\n      </Hybrid>\r\n      <Java />\r\n      <Native>\r\n        <option name=\"USE_JAVA_AWARE_DEBUGGER\" value=\"false\" />\r\n        <option name=\"SHOW_STATIC_VARS\" value=\"true\" />\r\n        <option name=\"WORKING_DIR\" value=\"\" />\r\n        <option name=\"TARGET_LOGGING_CHANNELS\" value=\"lldb process:gdb-remote packets\" />\r\n        <option name=\"SHOW_OPTIMIZED_WARNING\" value=\"true\" />\r\n      </Native>\r\n      <Profilers>\r\n        <option name=\"ADVANCED_PROFILING_ENABLED\" value=\"false\" />\r\n        <option name=\"STARTUP_PROFILING_ENABLED\" value=\"false\" />\r\n        <option name=\"STARTUP_CPU_PROFILING_ENABLED\" value=\"false\" />\r\n        <option name=\"STARTUP_CPU_PROFILING_CONFIGURATION_NAME\" value=\"Sample Java Methods\" />\r\n        <option name=\"STARTUP_NATIVE_MEMORY_PROFILING_ENABLED\" value=\"false\" />\r\n        <option name=\"NATIVE_MEMORY_SAMPLE_RATE_BYTES\" value=\"2048\" />\r\n      </Profilers>\r\n      <option name=\"DEEP_LINK\" value=\"\" />\r\n      <option name=\"ACTIVITY_CLASS\" value=\"\" />\r\n      <option name=\"SEARCH_ACTIVITY_IN_GLOBAL_SCOPE\" value=\"false\" />\r\n      <option name=\"SKIP_ACTIVITY_VALIDATION\" value=\"false\" />\r\n      <method v=\"2\">\r\n        <option name=\"Android.Gradle.BeforeRunTask\" enabled=\"true\" />\r\n      </method>\r\n    </configuration>\r\n  </component>\r\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\r\n  <component name=\"SvnConfiguration\">\r\n    <configuration />\r\n  </component>\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"6ea0b472-2ab6-4806-a1a1-f1653b5edd79\" name=\"Default Changelist\" comment=\"\" />\r\n      <created>1620413413419</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1620413413419</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00001\" summary=\"Created return classes for give a finer condition reporting&#10;&#10;Created keystore service and basic elements:&#10;     - service and elements to permit connection from other elements&#10;     - created beacon collection and methods to verity/put/remove elements&#10;     - created bucket collection and methods to add/getAll/remove elements\">\r\n      <created>1620425396111</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620425396111</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00002\" summary=\"Putted basic elements ignored by the git commit\">\r\n      <created>1620425533437</created>\r\n      <option name=\"number\" value=\"00002\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620425533437</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00003\" summary=\"Improved KeyValueManagement service&#10;     - created set of periodic Workers to clean the store&#10;     - cleaned data from expired information before be given&#10;     - add user location management&#10;     - add user bucket management&#10;     - add user signature management&#10;&#10;Created NotificationSender service&#10;     - created BoundService for its functionalities&#10;     - created connections with KeyValueManagement Service&#10;     - created listeners to manage the async requests&#10;     - created workers to send infection Notification&#10;&#10;General&#10;     - defined data passed between Riccardo and mine services&#10;     - created a set of classes to enforce the parameters sharing between services\">\r\n      <created>1620606747949</created>\r\n      <option name=\"number\" value=\"00003\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620606747949</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00004\" summary=\"Optimized Keyvalue and Notification systems&#10;     - only one periodic thread istantiated for keyvalue management&#10;     - completed mechanism for notification receive\">\r\n      <created>1620653789977</created>\r\n      <option name=\"number\" value=\"00004\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00004\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620653789977</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00005\" summary=\"Completed firestore management and all the interconnection between the components to generate the final behaviour\">\r\n      <created>1620685573057</created>\r\n      <option name=\"number\" value=\"00005\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00005\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620685573057</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00006\" summary=\"Merged Laura and mine components into a unique consistent application\">\r\n      <created>1620728625839</created>\r\n      <option name=\"number\" value=\"00006\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00006\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620728625839</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00007\" summary=\"Merging projects\">\r\n      <created>1620730745847</created>\r\n      <option name=\"number\" value=\"00007\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00007\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620730745847</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00008\" summary=\"Commented all the files and make some bug correction\">\r\n      <created>1620740440083</created>\r\n      <option name=\"number\" value=\"00008\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00008\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620740440083</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00009\" summary=\"Commented all the files and make some bug correction\">\r\n      <created>1620740530768</created>\r\n      <option name=\"number\" value=\"00009\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00009\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620740530768</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00010\" summary=\"Fixed some bug.\">\r\n      <created>1620753441494</created>\r\n      <option name=\"number\" value=\"00010\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00010\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620753441494</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00011\" summary=\"Solved an error occured during the previous merge\">\r\n      <created>1620806822407</created>\r\n      <option name=\"number\" value=\"00011\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00011\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620806822407</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00012\" summary=\"Ho commentato delle cose\">\r\n      <created>1620830081089</created>\r\n      <option name=\"number\" value=\"00012\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00012\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620830081089</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00013\" summary=\"Connected the positivity button\">\r\n      <created>1620831816043</created>\r\n      <option name=\"number\" value=\"00013\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00013\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620831816043</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00014\" summary=\"Implemented functionality and layout to show the contact with an infected people in all the activities once the notification has been received.\">\r\n      <created>1620838738681</created>\r\n      <option name=\"number\" value=\"00014\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00014\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620838738681</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00015\" summary=\"Add saving state for SettingActivity\">\r\n      <created>1620889158396</created>\r\n      <option name=\"number\" value=\"00015\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00015\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620889158396</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00016\" summary=\"Read from db the initial status.\">\r\n      <created>1620893398982</created>\r\n      <option name=\"number\" value=\"00016\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00016\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1620893398982</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00017\" summary=\"Added a menu to delete something from the DB. The connections with the deleting functions still be absent.\">\r\n      <created>1621108445062</created>\r\n      <option name=\"number\" value=\"00017\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00017\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621108445062</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00018\" summary=\"Some additions to the previous commit.\">\r\n      <created>1621110068312</created>\r\n      <option name=\"number\" value=\"00018\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00018\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621110068313</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00019\" summary=\"Added the changes to the layout frame in case of a delete. Starting implementing the log receive\">\r\n      <created>1621153743979</created>\r\n      <option name=\"number\" value=\"00019\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00019\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621153743979</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00020\" summary=\"Asynchronous implementation of the log window, filtering by TAG.\">\r\n      <created>1621159799549</created>\r\n      <option name=\"number\" value=\"00020\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00020\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621159799549</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00021\" summary=\"Asynchronous implementation of the log window, filtering by TAG.\">\r\n      <created>1621171115686</created>\r\n      <option name=\"number\" value=\"00021\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00021\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621171115686</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00022\" summary=\"Write in LogWindow with an external service.\">\r\n      <created>1621173761720</created>\r\n      <option name=\"number\" value=\"00022\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00022\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621173761720</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00023\" summary=\"Implementation of periodic reception of Log Messages.\">\r\n      <created>1621174978973</created>\r\n      <option name=\"number\" value=\"00023\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00023\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621174978973</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00024\" summary=\"Added main service package (to be linked with other application components)\">\r\n      <created>1621208953344</created>\r\n      <option name=\"number\" value=\"00024\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00024\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621208953344</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00025\" summary=\"Merged main with local and remote database services\">\r\n      <created>1621220658675</created>\r\n      <option name=\"number\" value=\"00025\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00025\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621220658675</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00026\" summary=\"removed the lock assert false\">\r\n      <created>1621235035924</created>\r\n      <option name=\"number\" value=\"00026\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00026\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621235035925</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00027\" summary=\"Added TAGS to LogService for showing messages into the window.\">\r\n      <created>1621266136886</created>\r\n      <option name=\"number\" value=\"00027\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00027\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621266136886</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00028\" summary=\"added FLAG_ACTIVITY_NEW_TASK to resolve an internal error.\">\r\n      <created>1621321736078</created>\r\n      <option name=\"number\" value=\"00028\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00028\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621321736078</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00029\" summary=\"Integration of FCM for subscribe to a topic\">\r\n      <created>1621327975411</created>\r\n      <option name=\"number\" value=\"00029\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00029\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621327975411</updated>\r\n    </task>\r\n    <task id=\"LOCAL-00030\" summary=\"Main Service Merging Completed (&quot;Other Positions&quot; insertion disabled)\">\r\n      <created>1621371329963</created>\r\n      <option name=\"number\" value=\"00030\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00030\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1621371329963</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"31\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"Vcs.Log.Tabs.Properties\">\r\n    <option name=\"TAB_STATES\">\r\n      <map>\r\n        <entry key=\"MAIN\">\r\n          <value>\r\n            <State>\r\n              <option name=\"FILTERS\">\r\n                <map>\r\n                  <entry key=\"branch\">\r\n                    <value>\r\n                      <list>\r\n                        <option value=\"myBranch\" />\r\n                      </list>\r\n                    </value>\r\n                  </entry>\r\n                </map>\r\n              </option>\r\n            </State>\r\n          </value>\r\n        </entry>\r\n      </map>\r\n    </option>\r\n    <option name=\"oldMeFiltersMigrated\" value=\"true\" />\r\n  </component>\r\n  <component name=\"VcsManagerConfiguration\">\r\n    <MESSAGE value=\"Optimized Keyvalue and Notification systems&#10;     - only one periodic thread istantiated for keyvalue management&#10;     - completed mechanism for notification receive\" />\r\n    <MESSAGE value=\"Completed firestore management and all the interconnection between the components to generate the final behaviour\" />\r\n    <MESSAGE value=\"Merged Laura and mine components into a unique consistent application\" />\r\n    <MESSAGE value=\"Merging projects\" />\r\n    <MESSAGE value=\"Commented all the files and make some bug correction\" />\r\n    <MESSAGE value=\"Fixed some bug.\" />\r\n    <MESSAGE value=\"Solved an error occured during the previous merge\" />\r\n    <MESSAGE value=\"Ho commentato delle cose\" />\r\n    <MESSAGE value=\"Connected the positivity button\" />\r\n    <MESSAGE value=\"Implemented functionality and layout to show the contact with an infected people in all the activities once the notification has been received.\" />\r\n    <MESSAGE value=\"Add saving state for SettingActivity\" />\r\n    <MESSAGE value=\"Read from db the initial status.\" />\r\n    <MESSAGE value=\"Added a menu to delete something from the DB. The connections with the deleting functions still be absent.\" />\r\n    <MESSAGE value=\"Some additions to the previous commit.\" />\r\n    <MESSAGE value=\"Added the changes to the layout frame in case of a delete. Starting implementing the log receive\" />\r\n    <MESSAGE value=\"Asynchronous implementation of the log window, filtering by TAG.\" />\r\n    <MESSAGE value=\"Write in LogWindow with an external service.\" />\r\n    <MESSAGE value=\"Implementation of periodic reception of Log Messages.\" />\r\n    <MESSAGE value=\"Added main service package (to be linked with other application components)\" />\r\n    <MESSAGE value=\"Merged main with local and remote database services\" />\r\n    <MESSAGE value=\"removed the lock assert false\" />\r\n    <MESSAGE value=\"Added TAGS to LogService for showing messages into the window.\" />\r\n    <MESSAGE value=\"added FLAG_ACTIVITY_NEW_TASK to resolve an internal error.\" />\r\n    <MESSAGE value=\"Integration of FCM for subscribe to a topic\" />\r\n    <MESSAGE value=\"Main Service Merging Completed (&quot;Other Positions&quot; insertion disabled)\" />\r\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"Main Service Merging Completed (&quot;Other Positions&quot; insertion disabled)\" />\r\n  </component>\r\n  <component name=\"WindowStateProjectService\">\r\n    <state x=\"688\" y=\"277\" width=\"960\" height=\"533\" key=\"#PSD\" timestamp=\"1621365499347\" />\r\n    <state x=\"688\" y=\"277\" key=\"#PSD/0.0.2752.1109@0.0.2752.1109\" timestamp=\"1621365499347\" />\r\n    <state x=\"480\" y=\"293\" key=\"#PSD/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state x=\"480\" y=\"293\" width=\"960\" height=\"533\" key=\"#PSD/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state x=\"193\" y=\"82\" width=\"1071\" height=\"700\" key=\"#com.intellij.execution.impl.EditConfigurationsDialog\" timestamp=\"1621366117438\">\r\n      <screen x=\"0\" y=\"23\" width=\"1440\" height=\"794\" />\r\n    </state>\r\n    <state x=\"193\" y=\"82\" width=\"1071\" height=\"700\" key=\"#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1440.794@0.23.1440.794\" timestamp=\"1621366117438\" />\r\n    <state x=\"768\" y=\"264\" width=\"384\" height=\"590\" key=\"#com.intellij.ide.util.MemberChooser\" timestamp=\"1621365499347\" />\r\n    <state x=\"768\" y=\"264\" width=\"384\" height=\"590\" key=\"#com.intellij.ide.util.MemberChooser/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state x=\"589\" y=\"276\" key=\"#com.intellij.refactoring.memberPullUp.PullUpDialog\" timestamp=\"1621365499347\" />\r\n    <state x=\"589\" y=\"276\" key=\"#com.intellij.refactoring.memberPullUp.PullUpDialog/0.23.1440.794@0.23.1440.794\" timestamp=\"1621365499347\" />\r\n    <state x=\"693\" y=\"306\" width=\"534\" height=\"506\" key=\"#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog\" timestamp=\"1621365499347\" />\r\n    <state x=\"693\" y=\"306\" width=\"534\" height=\"506\" key=\"#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state x=\"100\" y=\"123\" width=\"1240\" height=\"594\" key=\"AVDManager\" timestamp=\"1621365499347\" />\r\n    <state x=\"100\" y=\"123\" width=\"1240\" height=\"594\" key=\"AVDManager/0.23.1440.794@0.23.1440.794\" timestamp=\"1621365499347\" />\r\n    <state x=\"308\" y=\"180\" width=\"824\" height=\"472\" key=\"AndroidCreateResourceFileDialog\" timestamp=\"1621365499347\" />\r\n    <state x=\"308\" y=\"180\" key=\"AndroidCreateResourceFileDialog/0.23.1440.794@0.23.1440.794\" timestamp=\"1621365499347\" />\r\n    <state x=\"308\" y=\"181\" width=\"824\" height=\"472\" key=\"AndroidCreateResourceFileDialog/0.23.1440.797@0.23.1440.797\" timestamp=\"1621365499347\" />\r\n    <state x=\"308\" y=\"182\" key=\"AndroidCreateResourceFileDialog/0.23.1440.800@0.23.1440.800\" timestamp=\"1621365499347\" />\r\n    <state x=\"1065\" y=\"301\" width=\"434\" height=\"487\" key=\"FileChooserDialogImpl\" timestamp=\"1621365499347\" />\r\n    <state x=\"1065\" y=\"301\" key=\"FileChooserDialogImpl/0.0.2752.1109@0.0.2752.1109\" timestamp=\"1621365499347\" />\r\n    <state x=\"743\" y=\"316\" width=\"434\" height=\"487\" key=\"FileChooserDialogImpl/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state width=\"1375\" height=\"281\" key=\"GridCell.Tab.0.bottom\" timestamp=\"1621408711654\">\r\n      <screen x=\"0\" y=\"23\" width=\"1440\" height=\"794\" />\r\n    </state>\r\n    <state width=\"2709\" height=\"346\" key=\"GridCell.Tab.0.bottom/0.0.2752.1109@0.0.2752.1109\" timestamp=\"1621365499347\" />\r\n    <state width=\"1375\" height=\"281\" key=\"GridCell.Tab.0.bottom/0.23.1440.794@0.23.1440.794\" timestamp=\"1621408711654\" />\r\n    <state width=\"1398\" height=\"213\" key=\"GridCell.Tab.0.bottom/0.23.1440.797@0.23.1440.797\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"542\" key=\"GridCell.Tab.0.bottom/0.23.1440.800@0.23.1440.800\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"205\" key=\"GridCell.Tab.0.bottom/0.23.1440.803@0.23.1440.803\" timestamp=\"1621365499347\" />\r\n    <state width=\"1874\" height=\"277\" key=\"GridCell.Tab.0.bottom/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state width=\"1874\" height=\"277\" key=\"GridCell.Tab.0.bottom/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state width=\"1375\" height=\"281\" key=\"GridCell.Tab.0.center\" timestamp=\"1621408711653\">\r\n      <screen x=\"0\" y=\"23\" width=\"1440\" height=\"794\" />\r\n    </state>\r\n    <state width=\"2709\" height=\"346\" key=\"GridCell.Tab.0.center/0.0.2752.1109@0.0.2752.1109\" timestamp=\"1621365499347\" />\r\n    <state width=\"1375\" height=\"281\" key=\"GridCell.Tab.0.center/0.23.1440.794@0.23.1440.794\" timestamp=\"1621408711653\" />\r\n    <state width=\"1398\" height=\"213\" key=\"GridCell.Tab.0.center/0.23.1440.797@0.23.1440.797\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"542\" key=\"GridCell.Tab.0.center/0.23.1440.800@0.23.1440.800\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"205\" key=\"GridCell.Tab.0.center/0.23.1440.803@0.23.1440.803\" timestamp=\"1621365499347\" />\r\n    <state width=\"1874\" height=\"277\" key=\"GridCell.Tab.0.center/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state width=\"1874\" height=\"277\" key=\"GridCell.Tab.0.center/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state width=\"1375\" height=\"281\" key=\"GridCell.Tab.0.left\" timestamp=\"1621408711653\">\r\n      <screen x=\"0\" y=\"23\" width=\"1440\" height=\"794\" />\r\n    </state>\r\n    <state width=\"2709\" height=\"346\" key=\"GridCell.Tab.0.left/0.0.2752.1109@0.0.2752.1109\" timestamp=\"1621365499347\" />\r\n    <state width=\"1375\" height=\"281\" key=\"GridCell.Tab.0.left/0.23.1440.794@0.23.1440.794\" timestamp=\"1621408711653\" />\r\n    <state width=\"1398\" height=\"213\" key=\"GridCell.Tab.0.left/0.23.1440.797@0.23.1440.797\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"542\" key=\"GridCell.Tab.0.left/0.23.1440.800@0.23.1440.800\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"205\" key=\"GridCell.Tab.0.left/0.23.1440.803@0.23.1440.803\" timestamp=\"1621365499347\" />\r\n    <state width=\"1874\" height=\"277\" key=\"GridCell.Tab.0.left/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state width=\"1874\" height=\"277\" key=\"GridCell.Tab.0.left/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state width=\"1375\" height=\"281\" key=\"GridCell.Tab.0.right\" timestamp=\"1621408711653\">\r\n      <screen x=\"0\" y=\"23\" width=\"1440\" height=\"794\" />\r\n    </state>\r\n    <state width=\"2709\" height=\"346\" key=\"GridCell.Tab.0.right/0.0.2752.1109@0.0.2752.1109\" timestamp=\"1621365499347\" />\r\n    <state width=\"1375\" height=\"281\" key=\"GridCell.Tab.0.right/0.23.1440.794@0.23.1440.794\" timestamp=\"1621408711653\" />\r\n    <state width=\"1398\" height=\"213\" key=\"GridCell.Tab.0.right/0.23.1440.797@0.23.1440.797\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"542\" key=\"GridCell.Tab.0.right/0.23.1440.800@0.23.1440.800\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"205\" key=\"GridCell.Tab.0.right/0.23.1440.803@0.23.1440.803\" timestamp=\"1621365499347\" />\r\n    <state width=\"1874\" height=\"277\" key=\"GridCell.Tab.0.right/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state width=\"1874\" height=\"277\" key=\"GridCell.Tab.0.right/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.bottom\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.bottom/0.23.1440.794@0.23.1440.794\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.bottom/0.23.1440.803@0.23.1440.803\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.center\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.center/0.23.1440.794@0.23.1440.794\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.center/0.23.1440.803@0.23.1440.803\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.left\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.left/0.23.1440.794@0.23.1440.794\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.left/0.23.1440.803@0.23.1440.803\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.right\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.right/0.23.1440.794@0.23.1440.794\" timestamp=\"1621365499347\" />\r\n    <state width=\"1398\" height=\"2\" key=\"GridCell.Tab.1.right/0.23.1440.803@0.23.1440.803\" timestamp=\"1621365499347\" />\r\n    <state x=\"416\" y=\"222\" width=\"810\" height=\"531\" key=\"Vcs.Push.Dialog.v2\" timestamp=\"1621371334279\">\r\n      <screen x=\"0\" y=\"23\" width=\"1440\" height=\"794\" />\r\n    </state>\r\n    <state x=\"416\" y=\"222\" key=\"Vcs.Push.Dialog.v2/0.23.1440.794@0.23.1440.794\" timestamp=\"1621371334279\" />\r\n    <state x=\"416\" y=\"223\" key=\"Vcs.Push.Dialog.v2/0.23.1440.797@0.23.1440.797\" timestamp=\"1621365499347\" />\r\n    <state x=\"416\" y=\"224\" key=\"Vcs.Push.Dialog.v2/0.23.1440.800@0.23.1440.800\" timestamp=\"1621365499347\" />\r\n    <state x=\"416\" y=\"224\" key=\"Vcs.Push.Dialog.v2/0.23.1440.803@0.23.1440.803\" timestamp=\"1621365499347\" />\r\n    <state x=\"555\" y=\"294\" width=\"810\" height=\"531\" key=\"Vcs.Push.Dialog.v2/0.31.1920.1049/1920.0.1920.1080@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state x=\"555\" y=\"294\" width=\"810\" height=\"531\" key=\"Vcs.Push.Dialog.v2/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state x=\"559\" y=\"379\" width=\"404\" height=\"158\" key=\"com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2\" timestamp=\"1621365499347\" />\r\n    <state x=\"559\" y=\"379\" key=\"com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1440.900@0.0.1440.900\" timestamp=\"1621365499347\" />\r\n    <state x=\"559\" y=\"357\" width=\"404\" height=\"158\" key=\"com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.23.1440.794@0.23.1440.794\" timestamp=\"1621365499347\" />\r\n    <state x=\"745\" y=\"472\" width=\"430\" height=\"175\" key=\"com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n    <state x=\"893\" y=\"245\" width=\"964\" height=\"717\" key=\"search.everywhere.popup\" timestamp=\"1621365499347\" />\r\n    <state x=\"893\" y=\"245\" width=\"964\" height=\"717\" key=\"search.everywhere.popup/0.0.2752.1109@0.0.2752.1109\" timestamp=\"1621365499347\" />\r\n    <state x=\"623\" y=\"263\" width=\"672\" height=\"678\" key=\"search.everywhere.popup/0.31.1920.1049@0.31.1920.1049\" timestamp=\"1621365499347\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/workspace.xml	(revision c0015bb3fb26c505c8f685f26da9c052e53d80c2)
++++ .idea/workspace.xml	(date 1621490941545)
+@@ -28,21 +28,24 @@
+         <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+       </path>
+     </expand>
+-    <select />
++    <select>
++      <path>
++        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
++        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
++        <item name="BRANCH:main" type="e8cecc67:BranchNodeDescriptor" />
++      </path>
++    </select>
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="6ea0b472-2ab6-4806-a1a1-f1653b5edd79" name="Default Changelist" comment="Main Service Merging Completed (&quot;Other Positions&quot; insertion disabled)">
+-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/utils/HashValues.java" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/testingapp/TestingActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/testingapp/TestingActivity.java" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/utils/LogParsing.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/utils/LogParsing.java" afterDir="false" />
++    <list default="true" id="6ea0b472-2ab6-4806-a1a1-f1653b5edd79" name="Default Changelist" comment="Searching for Stable Version">
++      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/mainapp/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer/mainapp/MainActivity.java" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+     <option name="LAST_RESOLUTION" value="IGNORE" />
+   </component>
+-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[SerialNumber@GSM9X18815W02087]" />
++  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[SerialNumber@ce011711a34434680c]" />
+   <component name="ExternalProjectsData">
+     <projectState path="$PROJECT_DIR$">
+       <ProjectState />
+@@ -102,6 +105,13 @@
+     <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+   </component>
+   <component name="RecentsManager">
++    <key name="MoveFile.RECENT_KEYS">
++      <recent name="$PROJECT_DIR$/app" />
++    </key>
++    <key name="CopyClassDialog.RECENTS_KEY">
++      <recent name="com.geotracer.geotracer.mainapp.heatMap" />
++      <recent name="com.geotracer.geotracer.db.remote" />
++    </key>
+     <key name="CopyFile.RECENT_KEYS">
+       <recent name="$PROJECT_DIR$/app/src/main/res" />
+       <recent name="$PROJECT_DIR$/app/src/main/res/drawable" />
+@@ -109,13 +119,6 @@
+       <recent name="C:\Users\Riccardo\Documents\GitHub\GeoTracker\GeoTracer\app\src\main\java\com\geotracer\geotracer" />
+       <recent name="$PROJECT_DIR$/app/src/main/java/com/geotracer/geotracer" />
+     </key>
+-    <key name="CopyClassDialog.RECENTS_KEY">
+-      <recent name="com.geotracer.geotracer.mainapp.heatMap" />
+-      <recent name="com.geotracer.geotracer.db.remote" />
+-    </key>
+-    <key name="MoveFile.RECENT_KEYS">
+-      <recent name="$PROJECT_DIR$/app" />
+-    </key>
+   </component>
+   <component name="RunManager">
+     <configuration default="true" type="AndroidJUnit" factoryName="Android JUnit">
+@@ -406,7 +409,14 @@
+       <option name="project" value="LOCAL" />
+       <updated>1621371329963</updated>
+     </task>
+-    <option name="localTasksCounter" value="31" />
++    <task id="LOCAL-00031" summary="Searching for Stable Version">
++      <created>1621490798879</created>
++      <option name="number" value="00031" />
++      <option name="presentableId" value="LOCAL-00031" />
++      <option name="project" value="LOCAL" />
++      <updated>1621490798879</updated>
++    </task>
++    <option name="localTasksCounter" value="32" />
+     <servers />
+   </component>
+   <component name="Vcs.Log.Tabs.Properties">
+@@ -420,7 +430,7 @@
+                   <entry key="branch">
+                     <value>
+                       <list>
+-                        <option value="myBranch" />
++                        <option value="main" />
+                       </list>
+                     </value>
+                   </entry>
+@@ -434,7 +444,6 @@
+     <option name="oldMeFiltersMigrated" value="true" />
+   </component>
+   <component name="VcsManagerConfiguration">
+-    <MESSAGE value="Optimized Keyvalue and Notification systems&#10;     - only one periodic thread istantiated for keyvalue management&#10;     - completed mechanism for notification receive" />
+     <MESSAGE value="Completed firestore management and all the interconnection between the components to generate the final behaviour" />
+     <MESSAGE value="Merged Laura and mine components into a unique consistent application" />
+     <MESSAGE value="Merging projects" />
+@@ -459,7 +468,8 @@
+     <MESSAGE value="added FLAG_ACTIVITY_NEW_TASK to resolve an internal error." />
+     <MESSAGE value="Integration of FCM for subscribe to a topic" />
+     <MESSAGE value="Main Service Merging Completed (&quot;Other Positions&quot; insertion disabled)" />
+-    <option name="LAST_COMMIT_MESSAGE" value="Main Service Merging Completed (&quot;Other Positions&quot; insertion disabled)" />
++    <MESSAGE value="Searching for Stable Version" />
++    <option name="LAST_COMMIT_MESSAGE" value="Searching for Stable Version" />
+   </component>
+   <component name="WindowStateProjectService">
+     <state x="688" y="277" width="960" height="533" key="#PSD" timestamp="1621365499347" />

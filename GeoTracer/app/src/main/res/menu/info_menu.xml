@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/from_info_to_main"
+        android:title="@string/menu_main_item"/>
+    <item
+        android:id="@+id/from_info_to_testing"
+        android:title="@string/menu_testing_item"/>
+    <item
+        android:id="@+id/from_info_to_topic"
+        android:title="Topics and Subscriptions"/>
+
+</menu>

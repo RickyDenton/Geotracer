@@ -1,0 +1,64 @@
+<resources>
+    <string name="app_name">Geotracer</string>
+    <string name="testing_name">Geotracer Testing</string>
+    <string name="settings">Geotracer Settings</string>
+    <string name="info">Geotracer Info</string>
+
+    <string name="menu_main_item">Home</string>
+    <string name="menu_testing_item">Testing Window</string>
+    <string name="menu_setting_item">Settings</string>
+    <string name="menu_info_item">Info</string>
+
+    <string name="no_contacts">Be relaxed! No contacts detected</string>
+    <string name="contacts">"WARNING!!\n You could have been in contact with an infected person\n"</string>
+    <string name="activity_info">
+        Go to the Topics and Subscribes Activity and sign up to the topics
+        if you want to stay updated on current regulations and receive information! \n\n
+        This application was developed by:\n
+                Riccardo Bertini\n
+                Nicola Barsanti\n
+                Laura Lemmi\n
+                Giulio Federico\n\n\n
+
+        The authors are not responsible for improper use.
+    </string>
+
+    <!-- Geotracer Main Service -->
+
+    <!-- Service Description -->
+    <string name="geotracer_service_descr">Contact Tracing and User Density Estimator Service</string>
+
+    <!-- Main Foreground Notification Channel -->
+    <string name="geotracer_notif_channel_id" translatable="false">geotracer_channel</string>
+    <string name="geotracer_notif_channel_name" translatable="false">Geotracer</string>
+    <string name="geotracer_notif_channel_description">Geotracer Contact Tracing System</string>
+    <string name="geotracer_notif_channel_started">You are protected</string>
+
+    <!-- Proximity Warning -->
+    <string name="geotracer_notif_proximity_title">Proximity Alert</string>
+    <string name="geotracer_notif_proximity_contents">You are too close to another individual!</string>
+
+    <!-- /Geotracer Main Service -->
+    <string name="testing_settings">Settings</string>
+    <string name="user_signature">User Signature</string>
+    <string name="get">Get</string>
+    <string name="change">Change</string>
+    <string name="user_position">User Position</string>
+    <string name="gps_status">GPS Status</string>
+    <string name="application_data">Application Data</string>
+    <string name="clean_data">Delete Old Data</string>
+    <string name="clean_menu">Delete</string>
+    <string name="log">Log</string>
+    <string name="main_service">Main Service</string>
+    <string name="signatures_dissemination">Signatures Dissemination</string>
+    <string name="signatures_collection">Signatures Collection</string>
+    <string name="user_localization">User Localization</string>
+    <string name="user_infected">User Infected</string>
+    <string name="proximity_notification">Proximity Notification</string>
+    <string name="empty">Empty</string>
+    <string name="show_log">Show Log</string>
+    <string name="set_distance">Set Distance</string>
+
+    <string name="titleInfectionAlarm">infection alert</string>
+
+</resources>

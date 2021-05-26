@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "379459989167",
+    "firebase_url": "https://geotracer-293f1-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "geotracer-293f1",
+    "storage_bucket": "geotracer-293f1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:379459989167:android:0a97f69c24ffeac055ae5a",
+        "android_client_info": {
+          "package_name": "com.geotracer.geotracer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "379459989167-emkvrieubj3ooe6rs513b5duvp87kcf6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7EIrtSema4kRYYN5Sn7E_ot-7_2A4bVA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "379459989167-emkvrieubj3ooe6rs513b5duvp87kcf6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
